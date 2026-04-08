@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOMTECH Mood Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div class="page-shell">
+      <header class="hero-shell">
+        <section class="hero glass hero-main">
+          <div class="hero-copy">
+            <p class="eyebrow">HOMTECH / Emotion Adaptive Living</p>
+            <h1>Akilli evi kullanicinin ifadesine gore yeniden sahneleyen modern demo paneli</h1>
+            <p class="hero-text">
+              Duygu tahmini, baglamsal karar motoru ve akilli ev aksiyonlarini tek bir premium
+              ekranda goster. Sunum sirasinda hem elle senaryo kur hem de fotograf yukleyip
+              gercek model sonucunu aninda yansit.
+            </p>
+            <div class="hero-actions">
+              <button class="hero-button primary-scroll" type="button" data-jump-tab="analysis">
+                Fotograf Analizine Git
+              </button>
+              <button class="hero-button secondary-scroll" type="button" data-jump-tab="scenario">
+                Senaryo Modunu Ac
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-aside">
+            <div class="status-card">
+              <span class="status-label">Canli Sistem Durumu</span>
+              <strong id="status-pill">Model hazirlaniyor</strong>
+              <p>Yerel web arayuzu, duygu tahmini ve HOMTECH karar motoru ayni panelde.</p>
+            </div>
+
+            <div class="hero-highlights">
+              <div>
+                <strong>2 Mod</strong>
+                <span>Senaryo kurgusu ve fotograf analizi</span>
+              </div>
+              <div>
+                <strong>7 Duygu</strong>
+                <span>Her ifade icin farkli cihaz stratejisi</span>
+              </div>
+              <div>
+                <strong>Anlik Sahne</strong>
+                <span>Isik, muzik, sicaklik ve bildirim plani</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </header>
+
+      <main class="dashboard-grid">
+        <section class="control-panel glass">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Kontrol Merkezi</p>
+              <h2>Sunum Akisi</h2>
+            </div>
+            <p>Elle sahne kur veya fotograf yukleyip modele sor.</p>
+          </div>
+
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="scenario">Senaryo</button>
+            <button class="tab" data-tab="analysis">Gorsel Analizi</button>
+          </div>
+
+          <form id="scenario-form" class="form-pane active">
+            <div class="micro-copy">
+              Ders sunumunda akisi garantiye almak icin ruh halini ve ev baglamini elle belirle.
+            </div>
+
+            <div class="field-group">
+              <div class="group-title">Ruh Hali</div>
+              <label>
+                Duygu
+                <select name="emotion">
+                  <option value="happy">Mutlu</option>
+                  <option value="sad">Uzgun</option>
+                  <option value="angry">Ofkeli</option>
+                  <option value="fear">Korku</option>
+                  <option value="surprise">Sasirmis</option>
+                  <option value="neutral">Notr</option>
+                  <option value="disgust">Igrenme</option>
+                </select>
+              </label>
+
+              <label>
+                Guven skoru
+                <input type="range" name="confidence" min="0.30" max="0.99" step="0.01" value="0.82" />
+                <span class="range-value" data-range-for="confidence">0.82</span>
+              </label>
+            </div>
+
+            <div class="field-group">
+              <div class="group-title">Ev Baglami</div>
+              <div class="triple-grid">
+                <label>
+                  Zaman
+                  <select name="time_of_day">
+                    <option value="morning">Sabah</option>
+                    <option value="day">Gunduz</option>
+                    <option value="evening" selected>Aksam</option>
+                    <option value="night">Gece</option>
+                  </select>
+                </label>
+                <label>
+                  Ev Dolulugu
+                  <select name="occupancy">
+                    <option value="alone">Yalniz</option>
+                    <option value="family">Aile</option>
+                    <option value="guests">Misafir</option>
+                  </select>
+                </label>
+                <label class="toggle">
+                  Sessiz Saatler
+                  <input type="checkbox" name="quiet_hours" />
+                  <span class="toggle-chip">off</span>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="primary-button">Ortami Simule Et</button>
+          </form>
+
+          <form id="analysis-form" class="form-pane">
+            <div class="micro-copy">
+              Tek kisilik, onde ve iyi isik alan bir fotograf kullanirsan model daha tutarli sonuc verir.
+            </div>
+
+            <div class="field-group">
+              <div class="group-title">Fotograf Girisi</div>
+              <label class="file-drop" id="file-drop-zone">
+                <input type="file" name="image" accept="image/*" />
+                <span class="drop-title">Dosyayi buraya surukle birak</span>
+                <span class="drop-subtitle">veya tiklayip galeriden sec</span>
+                <span id="file-name" class="file-name">Heniz dosya secilmedi</span>
+              </label>
+            </div>
+
+            <div class="field-group">
+              <div class="group-title">Ev Baglami</div>
+              <div class="triple-grid">
+                <label>
+                  Zaman
+                  <select name="time_of_day">
+                    <option value="morning">Sabah</option>
+                    <option value="day">Gunduz</option>
+                    <option value="evening" selected>Aksam</option>
+                    <option value="night">Gece</option>
+                  </select>
+                </label>
+                <label>
+                  Ev Dolulugu
+                  <select name="occupancy">
+                    <option value="alone">Yalniz</option>
+                    <option value="family">Aile</option>
+                    <option value="guests">Misafir</option>
+                  </select>
+                </label>
+                <label class="toggle">
+                  Sessiz Saatler
+                  <input type="checkbox" name="quiet_hours" />
+                  <span class="toggle-chip">off</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="field-group compact">
+              <label class="toggle wide-toggle">
+                Tum Gorseli Kullan
+                <input type="checkbox" name="use_full_image" />
+                <span class="toggle-chip">off</span>
+              </label>
+            </div>
+
+            <button type="submit" class="primary-button">Gorseli Analiz Et</button>
+          </form>
+        </section>
+
+        <section class="command-center glass">
+          <div class="metrics-row">
+            <article class="metric-card accent-card">
+              <span class="metric-label">Algilanan Duygu</span>
+              <strong id="emotion-output">Mutlu</strong>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">HOMTECH Modu</span>
+              <strong id="mode-output">enerjik mod</strong>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Otomasyon</span>
+              <strong id="automation-output">otomatik uygulanabilir</strong>
+            </article>
+          </div>
+
+          <div class="experience-grid">
+            <section class="house-card">
+              <div class="house-topline">
+                <div>
+                  <p class="section-kicker">Canli Ev Sahnesi</p>
+                  <h2>Ortam Kararlari</h2>
+                </div>
+                <span id="source-output">Senaryo modu</span>
+              </div>
+
+              <div class="house-stage">
+                <div class="room glow-room">
+                  <span>Isik</span>
+                  <strong id="lighting-output">canli ve parlak aydinlatma</strong>
+                </div>
+                <div class="room climate-room">
+                  <span>Konfor</span>
+                  <strong><span id="temperature-output">21</span>C / <span id="brightness-output">75</span>%</strong>
+                </div>
+                <div class="room audio-room">
+                  <span>Muzik</span>
+                  <strong id="music-output">enerjik oynatma listesi</strong>
+                </div>
+                <div class="room privacy-room">
+                  <span>Perde & Bildirim</span>
+                  <strong id="privacy-output">tam acik / standart bildirim duzeni</strong>
+                </div>
+              </div>
+            </section>
+
+            <aside class="summary-card">
+              <div class="summary-head">
+                <div>
+                  <p class="section-kicker">Durum Ozeti</p>
+                  <h2>Karar Aciklamasi</h2>
+                </div>
+                <span id="confidence-output">0.82 guven</span>
+              </div>
+
+              <div class="summary-flags">
+                <span id="confidence-badge" class="info-chip strong">Yuksek guven</span>
+                <span id="readiness-badge" class="info-chip">Sunum hazir</span>
+              </div>
+
+              <p id="summary-output">
+                happy duygusu icin enerjik mod onerildi.
+              </p>
+              <p id="note-output" class="muted">
+                Senaryo modu: el ile secilen duygu kullanildi.
+              </p>
+
+              <div class="preview-card">
+                <div class="preview-title">Yuklenen Fotograf</div>
+                <img id="preview-image" alt="Yuklenen gorsel onizlemesi" hidden />
+                <p id="preview-placeholder" class="muted">Henuz fotograf secilmedi.</p>
+              </div>
+            </aside>
+          </div>
+
+          <section class="probability-panel">
+            <div class="panel-head inline">
+              <div>
+                <p class="section-kicker">Model Dagilimi</p>
+                <h2>Duygu Olasiliklari</h2>
+              </div>
+              <p>Modelin hangi siniflar arasinda kararsiz kaldigini canli olarak izle.</p>
+            </div>
+            <div id="probability-list" class="probability-list"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
