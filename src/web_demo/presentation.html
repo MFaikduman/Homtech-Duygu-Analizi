@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HOMTECH Sunum Modülü</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/png" href="./app_icon.png" />
+    <link rel="stylesheet" href="./presentation.css" />
+  </head>
+  <body>
+    <div class="backdrop backdrop-one"></div>
+    <div class="backdrop backdrop-two"></div>
+
+    <div class="presentation-shell">
+      <aside class="rail">
+        <a class="brand-chip" href="/">HOMTECH Demo</a>
+        <nav class="rail-nav">
+          <a href="#hero">Özet</a>
+          <a href="#dataset">Veri Seti</a>
+          <a href="#pipeline">Akış</a>
+          <a href="#results">Sonuçlar</a>
+          <a href="#matrix">Confusion Matrix</a>
+          <a href="#product">Ürün Fikri</a>
+        </nav>
+      </aside>
+
+      <main class="slides">
+        <header class="presentation-toolbar glass">
+          <div class="toolbar-copy">
+            <span class="toolbar-label">Sunum Kontrolleri</span>
+            <strong id="slide-title">Özet</strong>
+          </div>
+          <div class="toolbar-actions">
+            <button id="theme-toggle" class="toolbar-button" type="button">Koyu Moda Geç</button>
+            <button id="presentation-toggle" class="toolbar-button primary" type="button">Sunum Modu</button>
+            <button id="fullscreen-toggle" class="toolbar-button" type="button">Tam Ekran</button>
+          </div>
+        </header>
+
+        <section id="hero" class="slide hero-slide glass">
+          <div class="hero-stage">
+            <div class="hero-copy-block">
+              <div class="eyebrow">HOMTECH / Sunum Modülü</div>
+              <h1 id="project-title">Yükleniyor...</h1>
+              <p id="project-subtitle" class="hero-subtitle"></p>
+              <p id="project-goal" class="hero-copy"></p>
+
+              <div id="hero-tags" class="hero-tags"></div>
+
+              <div class="hero-actions">
+                <a class="primary-link" href="/">Canlı Demo Paneline Dön</a>
+                <button id="reload-data" class="secondary-link" type="button">Veriyi Yenile</button>
+              </div>
+            </div>
+
+            <aside class="hero-spotlight">
+              <div class="spotlight-topline">Sunum Özeti</div>
+              <h3 id="spotlight-title">Modelin güçlü ve zayıf alanları</h3>
+              <p id="spotlight-copy"></p>
+              <div id="spotlight-grid" class="spotlight-grid"></div>
+            </aside>
+          </div>
+
+          <div class="hero-metrics">
+            <article class="metric-card accent">
+              <span>Veri Seti</span>
+              <strong id="dataset-total">-</strong>
+              <p>Toplam görsel</p>
+            </article>
+            <article class="metric-card">
+              <span>Artifact Accuracy</span>
+              <strong id="current-accuracy">-</strong>
+              <p>Güncel değerlendirme</p>
+            </article>
+            <article class="metric-card">
+              <span>Raporlanan Zirve</span>
+              <strong id="reported-accuracy">-</strong>
+              <p>README final sonucu</p>
+            </article>
+            <article class="metric-card">
+              <span>En İyi Val Accuracy</span>
+              <strong id="best-val-accuracy">-</strong>
+              <p>Eğitim geçmişinden</p>
+            </article>
+            <article class="metric-card">
+              <span>Girdi Boyutu</span>
+              <strong id="image-size">-</strong>
+              <p>Model giriş çözünürlüğü</p>
+            </article>
+          </div>
+
+          <div id="hero-summary-band" class="hero-summary-band"></div>
+        </section>
+
+        <section id="dataset" class="slide glass">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Veri Seti</p>
+              <h2>FER-2013 sınıf dağılımı ve kapsamı</h2>
+            </div>
+            <p id="dataset-summary" class="section-copy"></p>
+          </div>
+
+          <div class="dataset-grid">
+            <div class="panel-card">
+              <div class="card-title">Train / Test Dağılımı</div>
+              <div id="split-overview" class="split-overview"></div>
+            </div>
+
+            <div class="panel-card">
+              <div class="card-title">Sınıf Yoğunluğu</div>
+              <div id="dataset-bars" class="bar-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="pipeline" class="slide glass">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Sistem Akışı</p>
+              <h2>Duygudan akıllı ev sahnesine giden hat</h2>
+            </div>
+            <p class="section-copy">Model, ön işleme ve HOMTECH karar motoru tek akışta birleşiyor.</p>
+          </div>
+
+          <div class="pipeline-grid">
+            <div id="pipeline-steps" class="timeline"></div>
+            <div class="panel-card compact">
+              <div class="card-title">Teknoloji Yığını</div>
+              <div id="tech-stack" class="tech-stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="results" class="slide glass">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Model Sonuçları</p>
+              <h2>Genel metrikler ve sınıf bazlı performans</h2>
+            </div>
+            <p id="results-summary" class="section-copy"></p>
+          </div>
+
+          <div class="results-grid">
+            <div class="panel-card">
+              <div class="card-title">Genel Metrikler</div>
+              <div id="overall-metrics" class="overall-metrics"></div>
+            </div>
+            <div class="panel-card">
+              <div class="card-title">Sınıf Bazlı F1</div>
+              <div id="f1-bars" class="bar-list"></div>
+            </div>
+            <div class="panel-card wide-card">
+              <div class="card-title">Başarı / Gelişim Alanı</div>
+              <div id="highlight-grid" class="highlight-grid"></div>
+            </div>
+            <div class="panel-card wide-card emphasis-card">
+              <div class="card-title">Kısa Değerlendirme</div>
+              <p id="results-spotlight" class="spotlight-paragraph"></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="matrix" class="slide glass">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Hata Analizi</p>
+              <h2>Confusion Matrix ve Eğitim Özeti</h2>
+            </div>
+            <p id="training-summary" class="section-copy"></p>
+          </div>
+
+          <div class="matrix-grid">
+            <div class="panel-card image-card">
+              <div class="matrix-frame">
+                <img id="matrix-image" alt="Confusion matrix görseli" />
+              </div>
+              <p id="matrix-caption" class="image-caption"></p>
+            </div>
+            <div class="panel-card">
+              <div class="card-title">Eğitim Özet Kartları</div>
+              <div id="training-cards" class="training-cards"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="product" class="slide glass">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Ürün Fikri</p>
+              <h2>Ürünün Konumu ve Değeri</h2>
+            </div>
+            <p class="section-copy">Bu modül, teknik modeli günlük yaşama yaklaşan bir akıllı ev deneyimine dönüştürür.</p>
+          </div>
+
+          <div class="product-grid">
+            <article class="panel-card story-card">
+              <div class="card-title">Problem</div>
+              <p>Klasik duygu tanıma projeleri teknik olarak güçlü olsa da gerçek kullanım senaryosu göstermekte zayıf kalır.</p>
+            </article>
+            <article class="panel-card story-card">
+              <div class="card-title">Çözüm</div>
+              <p>Bu proje duygu sınıflandırmasını, ışık, sıcaklık, müzik ve bildirim kararlarına çevirerek ürünleşebilir bir deneyim sunar.</p>
+            </article>
+            <article class="panel-card story-card">
+              <div class="card-title">Değer Önerisi</div>
+              <p>Odak nokta sadece accuracy değil; veri, model, karar motoru ve arayüzün bir araya gelerek HOMTECH bağlamında değer üretmesidir.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="slide-controls" class="slide-controls glass" hidden>
+      <button id="prev-slide" class="nav-button" type="button">Önceki</button>
+      <div class="slide-progress">
+        <span id="slide-counter">1 / 6</span>
+        <div class="progress-track">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+      <button id="next-slide" class="nav-button" type="button">Sonraki</button>
+    </div>
+
+    <script src="./presentation.js" defer></script>
+  </body>
+</html>

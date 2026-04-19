@@ -8,17 +8,24 @@ const fileName = document.querySelector("#file-name");
 const previewImage = document.querySelector("#preview-image");
 const previewPlaceholder = document.querySelector("#preview-placeholder");
 const statusPill = document.querySelector("#status-pill");
+const statusDetail = document.querySelector("#status-detail");
 const probabilityList = document.querySelector("#probability-list");
 const heroJumpButtons = document.querySelectorAll("[data-jump-tab]");
+const analysisCopy = document.querySelector("#analysis-copy");
+const analysisSubmitButton = analysisForm.querySelector('button[type="submit"]');
+let predictionAvailable = false;
+let predictionLoading = false;
+let predictionError = "";
+let healthPollTimer = null;
 
 const emotionLabels = {
-  angry: "Ofkeli",
-  disgust: "Igrenme",
+  angry: "Öfkeli",
+  disgust: "İğrenme",
   fear: "Korku",
   happy: "Mutlu",
-  sad: "Uzgun",
-  surprise: "Sasirmis",
-  neutral: "Notr",
+  sad: "Üzgün",
+  surprise: "Şaşırmış",
+  neutral: "Nötr",
 };
 
 const outputRefs = {
@@ -37,6 +44,103 @@ const outputRefs = {
   confidenceBadge: document.querySelector("#confidence-badge"),
   readinessBadge: document.querySelector("#readiness-badge"),
 };
+
+function getReadyStatusLabel() {
+  if (predictionAvailable) {
+    return "Hazır";
+  }
+  if (predictionLoading) {
+    return "Yükleniyor";
+  }
+  return "Senaryo hazır";
+}
+
+function getReadyStatusDetail() {
+  if (predictionAvailable) {
+    return "Tahmin modeli ve senaryo motoru hazir.";
+  }
+  if (predictionLoading) {
+    return "Tahmin modeli arka planda yükleniyor. Analiz birazdan aktif olacak.";
+  }
+  return predictionError || "Tahmin modeli yok; senaryo modu kullanılabilir.";
+}
+
+function setStatus(text, detail = "") {
+  statusPill.textContent = text;
+  if (statusDetail) {
+    statusDetail.textContent = detail;
+  }
+}
+
+function setAnalysisAvailability(isAvailable, message) {
+  predictionAvailable = isAvailable;
+  analysisSubmitButton.disabled = !isAvailable;
+  if (analysisCopy) {
+    analysisCopy.textContent = message;
+  }
+}
+
+function isSupportedImage(file) {
+  return Boolean(file && file.type.startsWith("image/"));
+}
+
+function clearSelectedFile() {
+  fileInput.value = "";
+  updateSelectedFile(null);
+}
+
+function scheduleHealthRefresh(delay = 3000) {
+  if (healthPollTimer) {
+    clearTimeout(healthPollTimer);
+  }
+
+  healthPollTimer = window.setTimeout(() => {
+    refreshHealth();
+  }, delay);
+}
+
+function applyHealth(health) {
+  predictionAvailable = Boolean(health.model_ready);
+  predictionLoading = Boolean(health.model_loading);
+  predictionError = health.model_error || "";
+
+  if (predictionAvailable) {
+    setAnalysisAvailability(
+      true,
+      "Tek kişilik, önde ve iyi ışık alan bir fotoğraf kullanırsan model daha tutarlı sonuç verir.",
+    );
+  } else if (predictionLoading) {
+    setAnalysisAvailability(
+      false,
+      "Tahmin modeli arka planda yükleniyor. Birazdan analiz butonu aktif olacak.",
+    );
+    scheduleHealthRefresh();
+  } else {
+    setAnalysisAvailability(
+      false,
+      "Tahmin modeli kullanılamıyor. Senaryo modunu kullanmaya devam edebilirsin.",
+    );
+  }
+
+  setStatus(getReadyStatusLabel(), getReadyStatusDetail());
+}
+
+async function refreshHealth() {
+  try {
+    const response = await fetch("/api/health");
+    const health = await response.json();
+    applyHealth(health);
+  } catch (error) {
+    predictionAvailable = false;
+    predictionLoading = false;
+    predictionError = "";
+    setAnalysisAvailability(
+      false,
+      "Sunucuya bağlanılamadığı için analiz modu geçici olarak kullanılamıyor.",
+    );
+    setStatus("Sunucu yok", "API şu an erişilebilir değil.");
+  }
+}
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -72,7 +176,7 @@ document.querySelectorAll('.toggle input[type="checkbox"]').forEach((checkbox) =
 });
 
 function updateSelectedFile(file) {
-  fileName.textContent = file ? file.name : "Heniz dosya secilmedi";
+  fileName.textContent = file ? file.name : "Henüz dosya seçilmedi";
   if (!file) {
     previewImage.hidden = true;
     previewImage.removeAttribute("src");
@@ -90,7 +194,25 @@ function updateSelectedFile(file) {
 }
 
 fileInput.addEventListener("change", () => {
-  updateSelectedFile(fileInput.files[0]);
+  const [file] = fileInput.files;
+  if (file && !isSupportedImage(file)) {
+    clearSelectedFile();
+    setStatus("Geçersiz dosya", "Yalnızca görsel dosyaları kabul ediliyor.");
+    outputRefs.note.textContent = "Lütfen JPG, PNG veya benzeri bir görsel dosyası seç.";
+    return;
+  }
+
+  updateSelectedFile(file);
+  if (file) {
+    setStatus(
+      predictionAvailable ? "Fotoğraf hazır" : getReadyStatusLabel(),
+      predictionAvailable
+        ? "Fotoğraf seçildi; analiz isteği gönderilebilir."
+        : predictionLoading
+          ? "Fotoğraf seçildi. Model yüklenince analiz aktif olacak."
+          : "Fotoğraf seçildi ama tahmin modeli şu an hazır değil.",
+    );
+  }
 });
 
 ["dragenter", "dragover"].forEach((eventName) => {
@@ -109,9 +231,9 @@ fileInput.addEventListener("change", () => {
 
 fileDropZone.addEventListener("drop", (event) => {
   const [file] = event.dataTransfer.files;
-  if (!file || !file.type.startsWith("image/")) {
-    statusPill.textContent = "Gecersiz dosya";
-    outputRefs.note.textContent = "Lutfen yalnizca bir gorsel dosyasi surukleyip birak.";
+  if (!isSupportedImage(file)) {
+    setStatus("Geçersiz dosya", "Yalnızca görsel dosyaları kabul ediliyor.");
+    outputRefs.note.textContent = "Lütfen yalnızca bir görsel dosyası sürükleyip bırak.";
     return;
   }
 
@@ -119,8 +241,15 @@ fileDropZone.addEventListener("drop", (event) => {
   dataTransfer.items.add(file);
   fileInput.files = dataTransfer.files;
   updateSelectedFile(file);
-  statusPill.textContent = "Fotograf hazir";
-  outputRefs.note.textContent = "Fotograf alindi. Analiz icin butona basabilirsin.";
+  setStatus(
+    predictionAvailable ? "Fotoğraf hazır" : getReadyStatusLabel(),
+    predictionAvailable
+      ? "Fotoğraf seçildi; analiz isteği gönderilebilir."
+      : predictionLoading
+        ? "Fotoğraf seçildi. Model yüklenince analiz aktif olacak."
+        : "Fotoğraf seçildi ama tahmin modeli şu an hazır değil.",
+  );
+  outputRefs.note.textContent = "Fotoğraf alındı. Analiz için butona basabilirsin.";
 });
 
 function collectFormState(form) {
@@ -136,7 +265,7 @@ function renderProbabilities(probabilities) {
   probabilityList.innerHTML = "";
   const entries = Object.entries(probabilities || {});
   if (!entries.length) {
-    probabilityList.innerHTML = "<p class='muted'>Senaryo modunda olasilik dagilimi gosterilmiyor.</p>";
+    probabilityList.innerHTML = "<p class='muted'>Senaryo modunda olasılık dağılımı gösterilmiyor.</p>";
     return;
   }
 
@@ -158,12 +287,12 @@ function renderProbabilities(probabilities) {
 
 function describeConfidence(score) {
   if (score >= 0.75) {
-    return "Yuksek guven";
+    return "Yüksek güven";
   }
   if (score >= 0.55) {
-    return "Orta guven";
+    return "Orta güven";
   }
-  return "Dusuk guven";
+  return "Düşük güven";
 }
 
 function renderResult(payload) {
@@ -177,17 +306,17 @@ function renderResult(payload) {
   outputRefs.music.textContent = plan.music_scene;
   outputRefs.privacy.textContent = `${plan.blinds_position} / ${plan.notification_policy}`;
   outputRefs.source.textContent = payload.source === "prediction" ? "Model analizi" : "Senaryo modu";
-  outputRefs.confidence.textContent = `${plan.confidence.toFixed(2)} guven`;
+  outputRefs.confidence.textContent = `${plan.confidence.toFixed(2)} güven`;
   outputRefs.summary.textContent = plan.summary;
   outputRefs.note.textContent = payload.preprocessing_note;
   outputRefs.confidenceBadge.textContent = describeConfidence(plan.confidence);
   outputRefs.readinessBadge.textContent =
-    plan.confidence >= 0.6 ? "Otomasyon adayi" : "Onay onerilir";
+    plan.confidence >= 0.6 ? "Otomasyon adayı" : "Onay önerilir";
   renderProbabilities(payload.probabilities);
 }
 
 async function sendJson(url, payload) {
-  statusPill.textContent = "Calisiyor";
+  setStatus("Çalışıyor", "İstek işleniyor.");
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -195,9 +324,9 @@ async function sendJson(url, payload) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Beklenmeyen bir hata olustu");
+    throw new Error(data.error || "Beklenmeyen bir hata oluştu");
   }
-  statusPill.textContent = "Hazir";
+  setStatus(getReadyStatusLabel(), getReadyStatusDetail());
   return data;
 }
 
@@ -212,24 +341,37 @@ scenarioForm.addEventListener("submit", async (event) => {
     });
     renderResult(result);
   } catch (error) {
-    statusPill.textContent = "Hata";
+    setStatus("Hata", error.message);
     outputRefs.note.textContent = error.message;
   }
 });
 
 analysisForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!predictionAvailable) {
+    setStatus(
+      predictionLoading ? "Yükleniyor" : "Tahmin kapalı",
+      predictionLoading
+        ? "Tahmin modeli arka planda yükleniyor."
+        : "Tahmin modeli şu an kullanılamıyor.",
+    );
+    outputRefs.note.textContent = predictionLoading
+      ? "Model yüklenirken senaryo modunu kullanabilir veya biraz sonra tekrar deneyebilirsin."
+      : "Analiz modunu kullanmak için modelin yüklenmiş olması gerekiyor.";
+    return;
+  }
+
   const file = fileInput.files[0];
   if (!file) {
-    statusPill.textContent = "Dosya gerekli";
-    outputRefs.note.textContent = "Analiz icin once bir gorsel sec.";
+    setStatus("Dosya gerekli", "Analiz için bir görsel seçilmedi.");
+    outputRefs.note.textContent = "Analiz için önce bir görsel seç.";
     return;
   }
 
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Dosya okunurken hata olustu"));
+    reader.onerror = () => reject(new Error("Dosya okunurken hata oluştu"));
     reader.readAsDataURL(file);
   });
 
@@ -242,19 +384,14 @@ analysisForm.addEventListener("submit", async (event) => {
     });
     renderResult(result);
   } catch (error) {
-    statusPill.textContent = "Hata";
+    setStatus("Hata", error.message);
     outputRefs.note.textContent = error.message;
   }
 });
 
 async function boot() {
-  try {
-    const response = await fetch("/api/health");
-    const health = await response.json();
-    statusPill.textContent = health.model_ready ? "Hazir" : "Model yok";
-  } catch (error) {
-    statusPill.textContent = "Sunucu yok";
-  }
+  setStatus("Kontrol", "Sunucu ve model durumu kontrol ediliyor.");
+  await refreshHealth();
 
   const initialScenario = {
     plan: {
@@ -262,19 +399,24 @@ async function boot() {
       confidence: 0.82,
       suggested_mode: "enerjik mod",
       automation_state: "otomatik uygulanabilir",
-      lighting_scene: "canli ve parlak aydinlatma",
+      lighting_scene: "canlı ve parlak aydınlatma",
       brightness_percent: 75,
       temperature_celsius: 21,
       music_scene: "enerjik oynatma listesi",
-      blinds_position: "tam acik",
-      notification_policy: "standart bildirim duzeni",
-      summary: "happy duygusu icin enerjik mod onerildi. Ortam: canli ve parlak aydinlatma, muzik: enerjik oynatma listesi.",
+      blinds_position: "tam açık",
+      notification_policy: "standart bildirim düzeni",
+      summary: "happy duygusu için enerjik mod önerildi. Ortam: canlı ve parlak aydınlatma, müzik: enerjik oynatma listesi.",
     },
     source: "scenario",
     probabilities: {},
-    preprocessing_note: "Senaryo modu: el ile secilen duygu kullanildi.",
+    preprocessing_note: "Senaryo modu: el ile seçilen duygu kullanıldı.",
   };
   renderResult(initialScenario);
+  if (!predictionAvailable) {
+    outputRefs.note.textContent = predictionLoading
+      ? "Tahmin modeli arka planda yükleniyor; birazdan analiz kullanılabilir olacak."
+      : "Tahmin modeli hazır değil; senaryo modu ile devam edebilirsin.";
+  }
 }
 
 boot();

@@ -1,4 +1,4 @@
-"""Duygu tahminini akilli ev aksiyonlarina ceviren karar motoru."""
+"""Duygu tahminini akıllı ev aksiyonlarına çeviren karar motoru."""
 
 from dataclasses import dataclass
 
@@ -32,60 +32,60 @@ class SmartHomePlan:
 
 BASE_ACTIONS = {
     "angry": {
-        "lighting_scene": "sicak ve yumusak aydinlatma",
+        "lighting_scene": "sıcak ve yumuşak aydınlatma",
         "brightness_percent": 35,
         "temperature_celsius": 22,
-        "music_scene": "sakin enstrumantal oynatma listesi",
-        "blinds_position": "yari kapali",
-        "notification_policy": "yalnizca onemli bildirimler",
+        "music_scene": "sakin enstrümantal oynatma listesi",
+        "blinds_position": "yarı kapalı",
+        "notification_policy": "yalnızca önemli bildirimler",
     },
     "disgust": {
-        "lighting_scene": "dogal beyaz aydinlatma",
+        "lighting_scene": "doğal beyaz aydınlatma",
         "brightness_percent": 50,
         "temperature_celsius": 22,
-        "music_scene": "muzik kapali",
-        "blinds_position": "acik",
-        "notification_policy": "standart bildirim duzeni",
+        "music_scene": "müzik kapalı",
+        "blinds_position": "açık",
+        "notification_policy": "standart bildirim düzeni",
     },
     "fear": {
-        "lighting_scene": "guven veren sicak aydinlatma",
+        "lighting_scene": "güven veren sıcak aydınlatma",
         "brightness_percent": 45,
         "temperature_celsius": 23,
-        "music_scene": "dusuk sesli rahatlatici oynatma listesi",
-        "blinds_position": "kapali",
-        "notification_policy": "rahatsiz etmeyen mod",
+        "music_scene": "düşük sesli rahatlatıcı oynatma listesi",
+        "blinds_position": "kapalı",
+        "notification_policy": "rahatsız etmeyen mod",
     },
     "happy": {
-        "lighting_scene": "canli ve parlak aydinlatma",
+        "lighting_scene": "canlı ve parlak aydınlatma",
         "brightness_percent": 75,
         "temperature_celsius": 21,
         "music_scene": "enerjik oynatma listesi",
-        "blinds_position": "tam acik",
-        "notification_policy": "standart bildirim duzeni",
+        "blinds_position": "tam açık",
+        "notification_policy": "standart bildirim düzeni",
     },
     "sad": {
-        "lighting_scene": "sicak ve rahatlatan aydinlatma",
+        "lighting_scene": "sıcak ve rahatlatan aydınlatma",
         "brightness_percent": 40,
         "temperature_celsius": 23,
-        "music_scene": "yumusak rahatlatici oynatma listesi",
-        "blinds_position": "yari kapali",
+        "music_scene": "yumuşak rahatlatıcı oynatma listesi",
+        "blinds_position": "yarı kapalı",
         "notification_policy": "gereksiz bildirimleri ertele",
     },
     "surprise": {
-        "lighting_scene": "dengeleyici beyaz aydinlatma",
+        "lighting_scene": "dengeleyici beyaz aydınlatma",
         "brightness_percent": 60,
         "temperature_celsius": 22,
         "music_scene": "hafif tempolu oynatma listesi",
-        "blinds_position": "acik",
-        "notification_policy": "standart bildirim duzeni",
+        "blinds_position": "açık",
+        "notification_policy": "standart bildirim düzeni",
     },
     "neutral": {
-        "lighting_scene": "odak odakli beyaz aydinlatma",
+        "lighting_scene": "odak odaklı beyaz aydınlatma",
         "brightness_percent": 65,
         "temperature_celsius": 21,
         "music_scene": "odak modu oynatma listesi",
-        "blinds_position": "acik",
-        "notification_policy": "yalnizca oncelikli bildirimler",
+        "blinds_position": "açık",
+        "notification_policy": "yalnızca öncelikli bildirimler",
     },
 }
 
@@ -93,7 +93,7 @@ BASE_ACTIONS = {
 def _apply_time_adjustments(plan: dict, time_of_day: str) -> None:
     if time_of_day == "morning":
         plan["brightness_percent"] = min(plan["brightness_percent"] + 10, 100)
-        plan["blinds_position"] = "tam acik"
+        plan["blinds_position"] = "tam açık"
     elif time_of_day == "night":
         plan["brightness_percent"] = max(plan["brightness_percent"] - 20, 20)
         plan["notification_policy"] = "sessiz gece modu"
@@ -101,15 +101,15 @@ def _apply_time_adjustments(plan: dict, time_of_day: str) -> None:
 
 def _apply_occupancy_adjustments(plan: dict, occupancy: str) -> None:
     if occupancy == "family":
-        plan["music_scene"] = f"aile ortamina uygun {plan['music_scene']}"
+        plan["music_scene"] = f"aile ortamına uygun {plan['music_scene']}"
     elif occupancy == "guests":
         plan["lighting_scene"] = "misafir dostu " + plan["lighting_scene"]
-        plan["notification_policy"] = "gizli bildirim gostergesi"
+        plan["notification_policy"] = "gizli bildirim göstergesi"
 
 
 def _apply_quiet_hours_adjustments(plan: dict, quiet_hours: bool) -> None:
     if quiet_hours:
-        plan["music_scene"] = "muzik kapali"
+        plan["music_scene"] = "müzik kapalı"
         plan["brightness_percent"] = max(plan["brightness_percent"] - 15, 20)
         plan["notification_policy"] = "sessiz mod"
 
@@ -130,12 +130,12 @@ def build_smart_home_plan(
     automation_state = (
         "otomatik uygulanabilir"
         if confidence >= AUTO_APPLY_THRESHOLD
-        else "kullanici onayi gerekli"
+        else "kullanıcı onayı gerekli"
     )
     suggested_mode = HOME_MODE_MAP[emotion]
     summary = (
-        f"{emotion} duygusu icin {suggested_mode} onerildi. "
-        f"Ortam: {plan['lighting_scene']}, muzik: {plan['music_scene']}."
+        f"{emotion} duygusu için {suggested_mode} önerildi. "
+        f"Ortam: {plan['lighting_scene']}, müzik: {plan['music_scene']}."
     )
 
     return SmartHomePlan(

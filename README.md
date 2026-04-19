@@ -1,22 +1,24 @@
-# HOMTECH Duygu Analizi ve Akilli Ev Senaryo Sistemi
+# HOMTECH Duygu Analizi ve Akıllı Ev Senaryo Sistemi
 
-Bu proje, yuz goruntusunden duygu siniflandirmasi yaparak sonucuna gore HOMTECH benzeri bir akilli ev senaryo onerisi uretmek icin gelistirildi. Sistem; goruntu on isleme, TensorFlow/Keras tabanli model egitimi, tek gorsel uzerinden tahmin ve web arayuzunden senaryo gosterimi adimlarini bir araya getirir.
+Bu proje, yüz ifadesinden duygu tahmini yapıp sonucu HOMTECH benzeri bir akıllı ev senaryosuna dönüştüren bir demo ve sunum sistemidir. Yapı; görüntü ön işleme, TensorFlow/Keras tabanlı model eğitimi, tek görselle tahmin, açıklanabilir karar motoru, yerel web arayüzü, sunum modülü ve masaüstü uygulama akışlarını bir araya getirir.
 
-## Proje Ozeti
+## Proje Özeti
 
-- FER-2013 veri seti ile 7 sinifli duygu tanima akisi kurulur.
-- TensorFlow/Keras ile CNN tabanli model egitilir.
-- Tek bir yuz fotografi uzerinden duygu tahmini yapilir.
-- Tahmin sonucu, akilli ev davranis onerilerine donusturulur.
-- Yerel web arayuzu ile sunum ve demo senaryolari calistirilabilir.
+- FER-2013 veri seti ile 7 sınıflı duygu tanıma akışı kurulur.
+- MobileNetV2 tabanlı transfer learning modeli eğitilir.
+- Tek görsel üzerinden duygu tahmini yapılır.
+- Tahmin sonucu ışık, sıcaklık, müzik, perde ve bildirim kararlarına çevrilir.
+- Yerel web arayüzü ile hem canlı demo hem de sunum yapılabilir.
+- İstenirse proje Windows masaüstü uygulaması olarak da paketlenebilir.
 
-## Temel Ozellikler
+## Temel Özellikler
 
-- 7 duygu sinifi: `angry`, `disgust`, `fear`, `happy`, `sad`, `surprise`, `neutral`
-- Grayscale `48x48` goruntu akisi
-- Egitim, degerlendirme ve tahmin komutlari
-- Sinif skorlarini ve akilli ev planini gosteren demo arayuzu
-- Yuz tespitli veya tum gorsel uzerinden tahmin secenegi
+- 7 duygu sınıfı: `angry`, `disgust`, `fear`, `happy`, `sad`, `surprise`, `neutral`
+- FER stiline yaklaştırılmış `96x96` RGB model girdisi
+- Eğitim, değerlendirme ve tahmin komutları
+- Senaryo modu ve gerçek görsel analizi modu
+- Sunum için ayrı `/presentation` modülü
+- Masaüstü uygulama launcher ve `.exe` build akışı
 
 ## Teknolojiler
 
@@ -29,35 +31,55 @@ Bu proje, yuz goruntusunden duygu siniflandirmasi yaparak sonucuna gore HOMTECH 
 - Pillow
 - Matplotlib
 - Seaborn
+- HTML / CSS / JavaScript
+- pywebview
+- PyInstaller
 
-## Klasor Yapisi
+## Klasör Yapısı
 
 ```text
 YapayZekaModeli/
+|-- artifacts/
 |-- data/
 |   |-- raw/
 |   `-- processed/
 |-- notebooks/
 |-- reports/
+|-- scripts/
+|   `-- generate_app_icon.py
 |-- src/
 |   |-- data/
 |   |-- models/
 |   |-- web_demo/
+|   |   |-- index.html
+|   |   |-- app.js
+|   |   |-- styles.css
+|   |   |-- presentation.html
+|   |   |-- presentation.js
+|   |   |-- presentation.css
+|   |   |-- app_icon.png
+|   |   `-- app_icon.ico
 |   |-- config.py
 |   |-- demo_web.py
+|   |-- desktop_app.py
 |   |-- evaluate.py
 |   |-- image_preprocessing.py
 |   |-- predict.py
+|   |-- presentation_data.py
 |   |-- smart_home.py
 |   |-- smart_home_demo.py
 |   `-- train.py
+|-- build_desktop.ps1
 |-- requirements.txt
+|-- requirements-desktop.txt
+|-- start_demo.ps1
+|-- start_desktop.ps1
 `-- README.md
 ```
 
 ## Kurulum
 
-TensorFlow tarafinda uyumluluk icin Python `3.12` kullanilmasi onerilir.
+TensorFlow tarafında uyumluluk için Python `3.12` önerilir.
 
 ```powershell
 uv venv --python 3.12 --seed .venv312
@@ -65,22 +87,19 @@ uv venv --python 3.12 --seed .venv312
 uv pip install -r requirements.txt
 ```
 
-Eger sanal ortam daha once hatali olustuysa yeniden kurabilirsin:
+Desktop uygulama tarafı için ek bağımlılıklar:
 
 ```powershell
-Remove-Item -Recurse -Force .venv312
-uv venv --python 3.12 --seed .venv312
-.\.venv312\Scripts\Activate.ps1
-uv pip install -r requirements.txt
+uv pip install --python .\.venv312\Scripts\python.exe -r requirements-desktop.txt
 ```
 
-## Veri Seti Hazirlama
+## Veri Seti Hazırlama
 
-FER-2013 veri setini Kaggle uzerinden indir:
+FER-2013 veri setini Kaggle üzerinden indir:
 
 `https://www.kaggle.com/datasets/msambare/fer2013`
 
-Veri setini su yapida yerlestir:
+Veri setini şu yapıda yerleştir:
 
 ```text
 data/raw/fer2013/
@@ -88,40 +107,31 @@ data/raw/fer2013/
 `-- test/
 ```
 
-Kontrol komutu:
+Kontrol komutları:
 
 ```powershell
 python -m src.data.check_fer2013
-```
-
-On isleme akisini dogrulamak icin:
-
-```powershell
 python -m src.data.inspect_preprocessing
 ```
 
-## Model Egitimi
-
-Ilk egitim denemesi icin:
+## Model Eğitimi
 
 ```powershell
 python -m src.train
 ```
 
-Bu komut su ciktilari uretir:
+Bu komut başlıca şu çıktıları üretir:
 
 - `artifacts/emotion_cnn.keras`
 - `artifacts/training_history.csv`
 
-## Degerlendirme
-
-Egitilen modeli test etmek icin:
+## Değerlendirme
 
 ```powershell
 python -m src.evaluate
 ```
 
-Uretilen temel ciktilar:
+Üretilen temel çıktılar:
 
 - `accuracy`
 - `precision`
@@ -136,68 +146,97 @@ Kaydedilen dosyalar:
 - `artifacts/confusion_matrix.csv`
 - `artifacts/classification_report.txt`
 
-## En Iyi Sonuc
+## Referans Sonuç
 
-Proje finalinde baz alinan en iyi test sonucu:
+Proje finalinde baz alınan en iyi test sonucu:
 
 - `accuracy`: `0.5348`
 - `precision`: `0.5417`
 - `recall`: `0.5348`
 - `weighted f1-score`: `0.5227`
 
-## Tek Gorselle Tahmin
-
-Tek bir gorsel uzerinden tahmin almak icin:
+## Tek Görselle Tahmin
 
 ```powershell
 python -m src.predict --image "ornek_gorsel_yolu.jpg"
 ```
 
-Ornek kullanim:
-
-```powershell
-python -m src.predict --image "data/raw/fer2013/test/happy/PrivateTest_1071100.jpg"
-```
-
-Tum gorseli kullanmak icin:
+Tam görsel kullanımı:
 
 ```powershell
 python -m src.predict --image "ornek_gorsel_yolu.jpg" --use-full-image
 ```
 
-Akilli ev baglami ile tahmin:
+Akıllı ev bağlamı ile:
 
 ```powershell
-python -m src.predict --image "data/raw/fer2013/test/happy/PrivateTest_1071100.jpg" --time-of-day evening --occupancy family
+python -m src.predict --image "ornek_gorsel_yolu.jpg" --time-of-day evening --occupancy family
 ```
 
-## Akilli Ev Senaryo Demosu
+## Akıllı Ev Senaryo Demosu
 
-Model calistirmadan dogrudan senaryo gostermek icin:
+Model çalıştırmadan doğrudan senaryo göstermek için:
 
 ```powershell
 python -m src.smart_home_demo --emotion sad --confidence 0.82 --time-of-day night --quiet-hours
 ```
 
-Bu demo; aydinlatma, parlaklik, sicaklik, muzik profili, perde ve bildirim davranislarini kurala dayali olarak yorumlar.
+Bu akış; aydınlatma, parlaklık, sıcaklık, müzik, perde ve bildirim davranışlarını kural tabanlı olarak yorumlar.
 
-## Web Arayuzu
+## Web Arayüzü
 
-Yerel demo arayuzunu baslatmak icin:
+Yerel demo arayüzünü başlatmak için en pratik yol:
+
+```powershell
+.\start_demo.ps1
+```
+
+Alternatif:
 
 ```powershell
 python -m src.demo_web
 ```
 
-Ardindan tarayicida su adresi ac:
+Açılacak adresler:
 
-`http://127.0.0.1:8000`
+- Demo paneli: `http://127.0.0.1:8000/`
+- Sunum modülü: `http://127.0.0.1:8000/presentation`
 
-Arayuzde iki temel akis bulunur:
+Arayüzde iki temel akış bulunur:
 
-- `Senaryo`: Duygu ve ev baglamini elle secerek akilli ev sahnesi olusturur.
-- `Gorsel Analizi`: Yuklenen yuz fotografi uzerinden tahmin yapar ve senaryo onerir.
+- `Senaryo`: Duygu ve ev bağlamını elle seçerek akıllı ev sahnesi oluşturur.
+- `Görsel Analizi`: Yüklenen yüz fotoğrafı üzerinden tahmin yapar ve senaryo önerir.
 
-## Projenin Amaci
+Sunum modülünde:
 
-Bu calisma, duygu analizi ile akilli ev otomasyonu arasinda uygulamali bir kopru kurmayi hedefler. Amac yalnizca bir siniflandirma modeli gelistirmek degil, modeli gercek hayata yaklastiran bir urun fikri ile birlestirmektir.
+- veri seti özeti
+- teknoloji yığını
+- model metrikleri
+- confusion matrix
+- ürün fikri ve sistem akışı
+
+tek bir localhost yapısı içinde gösterilebilir.
+
+## Masaüstü Uygulama
+
+Projeyi tarayıcı yerine kendi penceresinde açmak için:
+
+```powershell
+.\start_desktop.ps1
+```
+
+Windows `.exe` build almak için:
+
+```powershell
+.\build_desktop.ps1
+```
+
+Build çıktısı:
+
+- `dist/HOMTECHMoodConsole/HOMTECHMoodConsole.exe`
+
+Not: PyInstaller çıktısında yalnızca `.exe` değil, tüm `dist/HOMTECHMoodConsole` klasörü birlikte taşınmalıdır.
+
+## Projenin Amacı
+
+Bu çalışma, duygu analizi ile akıllı ev otomasyonu arasında uygulamalı bir köprü kurmayı hedefler. Amaç yalnızca bir sınıflandırma modeli geliştirmek değil, modeli gerçek hayata yaklaşan bir ürün deneyimi ile birleştirmektir.

@@ -6,4 +6,3 @@ seaborn
 scikit-learn
 opencv-python
 Pillow
-kagglehub
