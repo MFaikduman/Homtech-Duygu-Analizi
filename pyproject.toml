@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "homtech-duygu-analizi"
+version = "0.1.0"
+description = "Yuz ifadesi tabanli duygu analizi ve akilli ev senaryo demosu."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "tensorflow==2.21.0",
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "seaborn",
+  "scikit-learn",
+  "opencv-python",
+  "Pillow",
+]
+
+[project.optional-dependencies]
+desktop = [
+  "pywebview",
+  "pyinstaller",
+]
+
+[project.scripts]
+homtech-demo = "src.demo_web:main"
+homtech-scenario = "src.smart_home_demo:main"
+homtech-train = "src.train:main"
+homtech-evaluate = "src.evaluate:main"
+
+[tool.setuptools]
+packages = ["src", "src.data", "src.models"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+src = ["web_demo/*"]

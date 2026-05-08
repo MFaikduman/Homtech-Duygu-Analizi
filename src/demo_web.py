@@ -1,4 +1,4 @@
-"""HOMTECH akıllı ev sistemi için yerel web demosu."""
+"""HOMTECH akilli ev sistemi icin yerel web demosu."""
 
 import argparse
 import base64
@@ -18,12 +18,13 @@ from src.smart_home import SmartHomeContext, build_smart_home_plan
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 ASSETS_DIR = PROJECT_ROOT / "src" / "web_demo"
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="HOMTECH akıllı ev sistemi için demo arayüzünü başlatır."
+        description="HOMTECH akilli ev sistemi icin demo arayuzunu baslatir."
     )
     parser.add_argument("--host", default="127.0.0.1", help="Sunucu adresi")
     parser.add_argument("--port", type=int, default=8000, help="Sunucu portu")
@@ -56,13 +57,13 @@ def plan_to_dict(plan) -> dict:
 
 def decode_image_payload(image_data: str) -> bytes:
     if not image_data:
-        raise ValueError("Görsel verisi eksik")
+        raise ValueError("Gorsel verisi eksik")
 
     encoded_part = image_data.split(",", 1)[1] if "," in image_data else image_data
     try:
         return base64.b64decode(encoded_part, validate=True)
     except Exception as exc:
-        raise ValueError("Görsel verisi çözülürken hata oluştu") from exc
+        raise ValueError("Gorsel verisi cozulurken hata olustu") from exc
 
 
 class PredictionRuntime:
@@ -76,10 +77,11 @@ class PredictionRuntime:
 
     def start_background_load(self) -> None:
         with self._lock:
-            if self._load_started:
+            if self._load_started or self.model_loading or self.model is not None:
                 return
             self._load_started = True
             self.model_loading = True
+            self.model_error = None
 
         worker = threading.Thread(
             target=self._load_prediction_model,
@@ -100,12 +102,13 @@ class PredictionRuntime:
             loaded_predict_image_bytes = predict_image_bytes
         except Exception as exc:
             error_message = str(exc)
-            LOGGER.warning("Tahmin modeli yüklenemedi: %s", error_message)
+            LOGGER.warning("Tahmin modeli yuklenemedi: %s", error_message)
 
         with self._lock:
             self.model = loaded_model
             self.model_error = error_message
             self.model_loading = False
+            self._load_started = loaded_model is not None
             if loaded_predict_image_bytes is not None:
                 self._predict_image_bytes = loaded_predict_image_bytes
 
@@ -130,14 +133,13 @@ class PredictionRuntime:
             predict_image_bytes = self._predict_image_bytes
 
         if model is None:
-            if model_loading:
-                raise RuntimeError(
-                    "Tahmin modeli halen yukleniyor. Birkac saniye sonra tekrar dene."
-                )
-            raise RuntimeError(model_error or "Tahmin modeli şu an kullanılamıyor.")
+            if not model_loading:
+                self.start_background_load()
+                raise RuntimeError("Tahmin modeli baslatildi. Birkac saniye sonra tekrar dene.")
+            raise RuntimeError("Tahmin modeli halen yukleniyor. Birkac saniye sonra tekrar dene.")
 
         if predict_image_bytes is None:
-            raise RuntimeError("Tahmin modülü hazır değil.")
+            raise RuntimeError("Tahmin modulu hazir degil.")
 
         return predict_image_bytes(
             image_bytes,
@@ -176,7 +178,9 @@ class DemoRequestHandler(SimpleHTTPRequestHandler):
             return self.handle_scenario()
         if self.path == "/api/predict":
             return self.handle_predict()
-        self.send_error(HTTPStatus.NOT_FOUND, "İstek bulunamadı")
+        if self.path == "/api/warmup-model":
+            return self.handle_warmup_model()
+        self.send_error(HTTPStatus.NOT_FOUND, "Istek bulunamadi")
 
     def guess_type(self, path):
         content_type = super().guess_type(path)
@@ -207,7 +211,7 @@ class DemoRequestHandler(SimpleHTTPRequestHandler):
                 "source": "scenario",
                 "plan": plan_to_dict(plan),
                 "probabilities": {},
-                "preprocessing_note": "Senaryo modu: el ile seçilen duygu kullanıldı.",
+                "preprocessing_note": "Senaryo modu: el ile secilen duygu kullanildi.",
             }
         )
 
@@ -235,10 +239,14 @@ class DemoRequestHandler(SimpleHTTPRequestHandler):
             }
         )
 
+    def handle_warmup_model(self):
+        self.prediction_runtime.start_background_load()
+        return self.send_json(self.prediction_runtime.get_status())
+
     def read_json(self) -> dict:
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_body = self.rfile.read(content_length)
-        return json.loads(raw_body.decode("utf-8"))
+        return json.loads(raw_body.decode("utf-8")) if raw_body else {}
 
     def serve_artifact(self):
         artifact_name = self.path.removeprefix("/artifacts/")
@@ -246,11 +254,11 @@ class DemoRequestHandler(SimpleHTTPRequestHandler):
         artifacts_root = ARTIFACTS_DIR.resolve()
 
         if artifacts_root not in target_path.parents and target_path != artifacts_root:
-            self.send_error(HTTPStatus.FORBIDDEN, "Erişim engellendi")
+            self.send_error(HTTPStatus.FORBIDDEN, "Erisim engellendi")
             return
 
         if not target_path.exists() or not target_path.is_file():
-            self.send_error(HTTPStatus.NOT_FOUND, "Dosya bulunamadı")
+            self.send_error(HTTPStatus.NOT_FOUND, "Dosya bulunamadi")
             return
 
         content_type, _ = mimetypes.guess_type(target_path.name)
@@ -283,7 +291,6 @@ def create_handler(prediction_runtime: PredictionRuntime):
 
 def create_demo_server(host: str = "127.0.0.1", port: int = 8000) -> ThreadingHTTPServer:
     prediction_runtime = PredictionRuntime()
-    prediction_runtime.start_background_load()
     return ThreadingHTTPServer(
         (host, port),
         create_handler(prediction_runtime),
@@ -315,15 +322,15 @@ def main() -> None:
     args = parse_args()
     server = create_demo_server(args.host, args.port)
     url = f"http://{args.host}:{args.port}"
-    print("HOMTECH demo arayüzü hazır.")
-    print("Web arayüzü hemen açılabilir.")
-    print("Tahmin modeli arka planda yükleniyor.")
-    print(f"Tarayıcıda aç: {url}")
-    print("Durdurmak için Ctrl+C kullan.")
+    print("HOMTECH demo arayuzu hazir.")
+    print("Web arayuzu hemen acilabilir.")
+    print("Analiz modeli sadece istendiginde yuklenir.")
+    print(f"Tarayicida ac: {url}")
+    print("Durdurmak icin Ctrl+C kullan.")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nSunucu kapatılıyor...")
+        print("\nSunucu kapatiliyor...")
     finally:
         server.server_close()
 

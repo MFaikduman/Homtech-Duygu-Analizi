@@ -9,6 +9,9 @@ $pythonPath = Join-Path $projectRoot ".venv312\Scripts\python.exe"
 $desktopRequirements = Join-Path $projectRoot "requirements-desktop.txt"
 $entryPoint = Join-Path $projectRoot "src\desktop_app.py"
 $iconPath = Join-Path $projectRoot "src\web_demo\app_icon.ico"
+$artifactsDir = Join-Path $projectRoot "artifacts"
+
+New-Item -ItemType Directory -Force -Path $artifactsDir | Out-Null
 
 if (-not (Test-Path -LiteralPath $pythonPath)) {
     throw "Python bulunamadi: $pythonPath`nOnce .venv312 ortamini olustur."
@@ -36,7 +39,7 @@ $pyinstallerArgs = @(
     "--add-data"
     "$projectRoot\src\web_demo;src\web_demo"
     "--add-data"
-    "$projectRoot\artifacts;artifacts"
+    "$artifactsDir;artifacts"
     "--add-data"
     "$projectRoot\README.md;."
     $entryPoint

@@ -14,7 +14,7 @@ from src.smart_home import SmartHomeContext, build_smart_home_plan
 from tensorflow import keras
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Tek bir görselden duygu tahmini yapar."
     )
@@ -48,7 +48,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_image_array(image_array):
+def load_image_array(image_array: np.ndarray) -> np.ndarray:
     image_array = cv2.resize(image_array, IMAGE_SIZE)
     image_array = adapt_to_fer_style_rgb(image_array)
     image_array = image_array.astype(np.float32)
@@ -56,7 +56,7 @@ def load_image_array(image_array):
     return image_array
 
 
-def detect_largest_face(gray_image):
+def detect_largest_face(gray_image: np.ndarray) -> tuple[int, int, int, int] | None:
     cascade_path = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
     face_cascade = cv2.CascadeClassifier(str(cascade_path))
 
@@ -74,7 +74,7 @@ def detect_largest_face(gray_image):
     return int(x), int(y), int(w), int(h)
 
 
-def prepare_rgb_image(rgb_image: np.ndarray, use_full_image: bool):
+def prepare_rgb_image(rgb_image: np.ndarray, use_full_image: bool) -> tuple[np.ndarray, str]:
     gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
 
     if use_full_image:
@@ -90,7 +90,7 @@ def prepare_rgb_image(rgb_image: np.ndarray, use_full_image: bool):
     return load_image_array(rgb_face_region), "en büyük yüz bölgesi kullanıldı"
 
 
-def prepare_image(image_path: Path, use_full_image: bool):
+def prepare_image(image_path: Path, use_full_image: bool) -> tuple[np.ndarray, str]:
     try:
         rgb_image = np.array(Image.open(image_path).convert("RGB"))
     except Exception as exc:
@@ -98,7 +98,7 @@ def prepare_image(image_path: Path, use_full_image: bool):
     return prepare_rgb_image(rgb_image, use_full_image)
 
 
-def prepare_image_bytes(image_bytes: bytes, use_full_image: bool):
+def prepare_image_bytes(image_bytes: bytes, use_full_image: bool) -> tuple[np.ndarray, str]:
     try:
         rgb_image = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
     except Exception as exc:
@@ -106,7 +106,7 @@ def prepare_image_bytes(image_bytes: bytes, use_full_image: bool):
     return prepare_rgb_image(rgb_image, use_full_image)
 
 
-def load_prediction_model(model_path: Path = MODEL_PATH):
+def load_prediction_model(model_path: Path = MODEL_PATH) -> keras.Model:
     if not model_path.exists():
         raise FileNotFoundError(
             f"Eğitilmiş model bulunamadı: {model_path}. Önce python -m src.train çalıştır."

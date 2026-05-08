@@ -15,16 +15,28 @@ from src.config import (
     CONFUSION_MATRIX_IMAGE_PATH,
     EMOTION_LABELS,
     MODEL_PATH,
+    USE_TTA_EVALUATION,
 )
 from src.data.data_loader import load_datasets
+from src.image_preprocessing import build_tta_variants
 
 
-def collect_predictions(model, dataset):
+TTA_VARIANT_COUNT = 3
+
+
+def collect_predictions(model, dataset, use_tta: bool = USE_TTA_EVALUATION):
     y_true = []
     y_pred = []
 
     for images, labels in dataset:
-        predictions = model.predict(images, verbose=0)
+        if use_tta:
+            image_batch = images.numpy()
+            tta_batch = np.concatenate([build_tta_variants(image) for image in image_batch], axis=0)
+            predictions = model.predict(tta_batch, verbose=0)
+            predictions = predictions.reshape(len(image_batch), TTA_VARIANT_COUNT, -1).mean(axis=1)
+        else:
+            predictions = model.predict(images, verbose=0)
+
         y_true.extend(np.argmax(labels.numpy(), axis=1))
         y_pred.extend(np.argmax(predictions, axis=1))
 
@@ -69,6 +81,7 @@ def main() -> None:
         )
 
     print("Model degerlendirme basladi.")
+    print(f"TTA aktif: {USE_TTA_EVALUATION}")
 
     _, _, test_dataset, _ = load_datasets()
     model = keras.models.load_model(MODEL_PATH)

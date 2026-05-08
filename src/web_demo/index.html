@@ -1,318 +1,230 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HOMTECH Mood Console</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <link rel="icon" type="image/png" href="./app_icon.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-
     <div class="page-shell">
-      <header class="hero-shell">
-        <section class="hero glass hero-main">
-          <div class="hero-stage">
-            <div class="hero-copy">
-              <p class="eyebrow">HOMTECH / Emotion Adaptive Living</p>
-              <h1>Akıllı evi kullanıcının ifadesine göre yeniden sahneleyen modern demo paneli</h1>
-              <p class="hero-text">
-                Duygu tahmini, bağlamsal karar motoru ve akıllı ev aksiyonlarını tek bir premium
-                ekranda göster. Sunum sırasında hem elle senaryo kur hem de fotoğraf yükleyip
-                gerçek model sonucunu anında yansıt.
-              </p>
-              <div class="hero-tags">
-                <span class="hero-tag">7 duygu sınıfı</span>
-                <span class="hero-tag">Canlı senaryo motoru</span>
-                <span class="hero-tag">Fotoğraf analizi</span>
-                <span class="hero-tag">Sunum + demo birlikte</span>
-              </div>
-              <div class="hero-actions">
-                <button class="hero-button primary-scroll" type="button" data-jump-tab="analysis">
-                  Fotoğraf Analizine Git
-                </button>
-                <button class="hero-button secondary-scroll" type="button" data-jump-tab="scenario">
-                  Senaryo Modunu Aç
-                </button>
-                <a class="hero-button secondary-scroll" href="/presentation">
-                  Sunum Modülü
-                </a>
-              </div>
-            </div>
-
-            <div class="hero-aside">
-              <div class="status-card">
-                <span class="status-label">Canlı Sistem Durumu</span>
-                <strong id="status-pill" aria-live="polite">Model hazırlanıyor</strong>
-                <p id="status-detail">Yerel web arayüzü, duygu tahmini ve HOMTECH karar motoru aynı panelde.</p>
-              </div>
-
-              <div class="hero-spotlight">
-                <div class="spotlight-topline">Demo Özeti</div>
-                <h3>Tek panelde ürün fikri ve canlı deneyim</h3>
-                <p>
-                  Bu ekran, modeli yalnızca teknik bir çıktı olarak değil, HOMTECH bağlamında
-                  yorumlanabilir bir akıllı ev deneyimi olarak sunar.
-                </p>
-                <div class="spotlight-grid">
-                  <div class="spotlight-item">
-                    <span>Senaryo modu</span>
-                    <strong>Sunum güvencesi</strong>
-                  </div>
-                  <div class="spotlight-item">
-                    <span>Analiz modu</span>
-                    <strong>Gerçek model çıktısı</strong>
-                  </div>
-                  <div class="spotlight-item">
-                    <span>Çıktı tipi</span>
-                    <strong>Işık + müzik + konfor</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="hero-summary-band">
-            <div class="summary-band-item">
-              <span>Kontrol</span>
-              <strong>Manuel senaryo + canlı analiz</strong>
-              <p>Sunum sırasında hem risksiz akışı hem de gerçek model tepkisini gösterebilirsin.</p>
-            </div>
-            <div class="summary-band-item">
-              <span>Karar Katmanı</span>
-              <strong>Akıllı ev aksiyon planı</strong>
-              <p>Duygu sonucu; ışık, sıcaklık, müzik, perde ve bildirim kararlarına çevrilir.</p>
-            </div>
-            <div class="summary-band-item">
-              <span>Sunum Geçişi</span>
-              <strong>Demo panelden sunum modülüne</strong>
-              <p>Aynı localhost yapısı içinde teknik anlatım ve canlı uygulama yan yana durur.</p>
-            </div>
-          </div>
-        </section>
+      <header class="topbar panel">
+        <div>
+          <p class="eyebrow">HOMTECH Mood Console</p>
+          <h1>Duyguya gore hizli ev sahnesi</h1>
+          <p class="lead">
+            Gereksiz adim olmadan ya senaryo sec ya da tek bir fotografla sonucu gor.
+          </p>
+        </div>
+        <div class="topbar-actions">
+          <a class="ghost-button" href="/presentation">Sunum Modu</a>
+          <button class="ghost-button" type="button" data-jump-tab="analysis">Analiz</button>
+        </div>
       </header>
 
-      <main class="dashboard-grid">
-        <section class="control-panel glass">
+      <main class="app-grid">
+        <section class="panel sidebar">
           <div class="panel-head">
             <div>
-              <p class="section-kicker">Kontrol Merkezi</p>
-              <h2>Sunum Akışı</h2>
+              <p class="section-kicker">Giris</p>
+              <h2>Kontrol</h2>
             </div>
-            <p>Elle sahne kur veya fotoğraf yükleyip modele sor.</p>
+            <strong id="status-pill" class="status-pill">Hazirlaniyor</strong>
           </div>
+          <p id="status-detail" class="muted status-text">
+            Sistem durumu kontrol ediliyor.
+          </p>
 
           <div class="tabs" role="tablist">
-            <button class="tab active" data-tab="scenario">Senaryo</button>
-            <button class="tab" data-tab="analysis">Görsel Analizi</button>
+            <button class="tab active" data-tab="scenario" type="button">Senaryo</button>
+            <button class="tab" data-tab="analysis" type="button">Analiz</button>
           </div>
 
           <form id="scenario-form" class="form-pane active">
-            <div class="micro-copy">
-              Ders sunumunda akışı garantiye almak için ruh halini ve ev bağlamını elle belirle.
-            </div>
-
             <div class="field-group">
-              <div class="group-title">Ruh Hâli</div>
               <label>
                 Duygu
                 <select name="emotion">
                   <option value="happy">Mutlu</option>
-                  <option value="sad">Üzgün</option>
-                  <option value="angry">Öfkeli</option>
+                  <option value="sad">Uzgün</option>
+                  <option value="angry">Ofkeli</option>
                   <option value="fear">Korku</option>
-                  <option value="surprise">Şaşırmış</option>
-                  <option value="neutral">Nötr</option>
-                  <option value="disgust">İğrenme</option>
+                  <option value="surprise">Saskin</option>
+                  <option value="neutral">Notr</option>
+                  <option value="disgust">Igrenme</option>
                 </select>
               </label>
 
               <label>
-                Güven skoru
+                Guven
                 <input type="range" name="confidence" min="0.30" max="0.99" step="0.01" value="0.82" />
                 <span class="range-value" data-range-for="confidence">0.82</span>
               </label>
             </div>
 
-            <div class="field-group">
-              <div class="group-title">Ev Bağlamı</div>
-              <div class="triple-grid">
-                <label>
-                  Zaman
-                  <select name="time_of_day">
-                    <option value="morning">Sabah</option>
-                    <option value="day">Gündüz</option>
-                    <option value="evening" selected>Akşam</option>
-                    <option value="night">Gece</option>
-                  </select>
-                </label>
-                <label>
-                  Ev Doluluğu
-                  <select name="occupancy">
-                    <option value="alone">Yalnız</option>
-                    <option value="family">Aile</option>
-                    <option value="guests">Misafir</option>
-                  </select>
-                </label>
-                <label class="toggle">
-                  Sessiz saatler
-                  <input type="checkbox" name="quiet_hours" />
-                  <span class="toggle-chip">off</span>
-                </label>
-              </div>
-            </div>
-
-            <button type="submit" class="primary-button">Ortami Simule Et</button>
-          </form>
-
-          <form id="analysis-form" class="form-pane">
-            <div id="analysis-copy" class="micro-copy">
-              Tek kişilik, önde ve iyi ışık alan bir fotoğraf kullanırsan model daha tutarlı sonuç verir.
-            </div>
-
-            <div class="field-group">
-              <div class="group-title">Fotoğraf Girişi</div>
-              <label class="file-drop" id="file-drop-zone">
-                <input type="file" name="image" accept="image/*" />
-                <span class="drop-title">Dosyayı buraya sürükle bırak</span>
-                <span class="drop-subtitle">veya tıklayıp galeriden seç</span>
-                <span id="file-name" class="file-name">Henüz dosya seçilmedi</span>
+            <div class="field-group compact-grid">
+              <label>
+                Zaman
+                <select name="time_of_day">
+                  <option value="morning">Sabah</option>
+                  <option value="day">Gunduz</option>
+                  <option value="evening" selected>Aksam</option>
+                  <option value="night">Gece</option>
+                </select>
               </label>
-            </div>
-
-            <div class="field-group">
-              <div class="group-title">Ev Bağlamı</div>
-              <div class="triple-grid">
-                <label>
-                  Zaman
-                  <select name="time_of_day">
-                    <option value="morning">Sabah</option>
-                    <option value="day">Gündüz</option>
-                    <option value="evening" selected>Akşam</option>
-                    <option value="night">Gece</option>
-                  </select>
-                </label>
-                <label>
-                  Ev Doluluğu
-                  <select name="occupancy">
-                    <option value="alone">Yalnız</option>
-                    <option value="family">Aile</option>
-                    <option value="guests">Misafir</option>
-                  </select>
-                </label>
-                <label class="toggle">
-                  Sessiz saatler
-                  <input type="checkbox" name="quiet_hours" />
-                  <span class="toggle-chip">off</span>
-                </label>
-              </div>
-            </div>
-
-            <div class="field-group compact">
-              <label class="toggle wide-toggle">
-                Tüm Görseli Kullan
-                <input type="checkbox" name="use_full_image" />
+              <label>
+                Ev durumu
+                <select name="occupancy">
+                  <option value="alone">Yalniz</option>
+                  <option value="family">Aile</option>
+                  <option value="guests">Misafir</option>
+                </select>
+              </label>
+              <label class="toggle simple-toggle">
+                Sessiz saatler
+                <input type="checkbox" name="quiet_hours" />
                 <span class="toggle-chip">off</span>
               </label>
             </div>
 
-            <button type="submit" class="primary-button">Görseli Analiz Et</button>
+            <button type="submit" class="primary-button">Senaryoyu Calistir</button>
+          </form>
+
+          <form id="analysis-form" class="form-pane">
+            <p id="analysis-copy" class="muted helper-text">
+              Analiz icin modeli hazirla, sonra tek bir fotograf sec.
+            </p>
+
+            <div class="field-group">
+              <label class="file-drop" id="file-drop-zone">
+                <input type="file" name="image" accept="image/*" />
+                <span class="drop-title">Fotograf sec</span>
+                <span class="drop-subtitle">JPG veya PNG</span>
+                <span id="file-name" class="file-name">Dosya secilmedi</span>
+              </label>
+            </div>
+
+            <div class="field-group compact-grid">
+              <label>
+                Zaman
+                <select name="time_of_day">
+                  <option value="morning">Sabah</option>
+                  <option value="day">Gunduz</option>
+                  <option value="evening" selected>Aksam</option>
+                  <option value="night">Gece</option>
+                </select>
+              </label>
+              <label>
+                Ev durumu
+                <select name="occupancy">
+                  <option value="alone">Yalniz</option>
+                  <option value="family">Aile</option>
+                  <option value="guests">Misafir</option>
+                </select>
+              </label>
+              <label class="toggle simple-toggle">
+                Sessiz saatler
+                <input type="checkbox" name="quiet_hours" />
+                <span class="toggle-chip">off</span>
+              </label>
+            </div>
+
+            <label class="toggle wide-toggle">
+              Tum gorseli kullan
+              <input type="checkbox" name="use_full_image" />
+              <span class="toggle-chip">off</span>
+            </label>
+
+            <div class="inline-actions">
+              <button id="warmup-button" class="ghost-button" type="button">Modeli Hazirla</button>
+              <button type="submit" class="primary-button">Gorseli Analiz Et</button>
+            </div>
           </form>
         </section>
 
-        <section class="command-center glass">
-          <div class="metrics-row">
-            <article class="metric-card accent-card">
-              <span class="metric-label">Algılanan Duygu</span>
+        <section class="workspace">
+          <div class="summary-grid">
+            <article class="panel metric-card accent-card">
+              <span class="metric-label">Duygu</span>
               <strong id="emotion-output">Mutlu</strong>
             </article>
-            <article class="metric-card">
-              <span class="metric-label">HOMTECH Modu</span>
+            <article class="panel metric-card">
+              <span class="metric-label">Mod</span>
               <strong id="mode-output">enerjik mod</strong>
             </article>
-            <article class="metric-card">
+            <article class="panel metric-card">
               <span class="metric-label">Otomasyon</span>
               <strong id="automation-output">otomatik uygulanabilir</strong>
             </article>
+            <article class="panel metric-card compact-status">
+              <span class="metric-label">Kaynak</span>
+              <strong id="source-output">Senaryo modu</strong>
+            </article>
           </div>
 
-          <div class="experience-grid">
-            <section class="house-card">
-              <div class="house-topline">
+          <div class="workspace-grid">
+            <section class="panel scene-panel">
+              <div class="section-head">
                 <div>
-                  <p class="section-kicker">Canlı Ev Sahnesi</p>
-                  <h2>Ortam Kararları</h2>
+                  <p class="section-kicker">Ortam</p>
+                  <h2>Karar plani</h2>
                 </div>
-                <span id="source-output">Senaryo modu</span>
+                <span id="confidence-output" class="info-chip strong">0.82 guven</span>
               </div>
 
-              <div class="house-stage">
-                <div class="room glow-room">
-                  <span>Işık</span>
-                  <strong id="lighting-output">canlı ve parlak aydınlatma</strong>
+              <div class="scene-grid">
+                <div class="scene-item">
+                  <span>Isik</span>
+                  <strong id="lighting-output">canli ve parlak aydinlatma</strong>
                 </div>
-                <div class="room climate-room">
+                <div class="scene-item">
                   <span>Konfor</span>
                   <strong><span id="temperature-output">21</span>C / <span id="brightness-output">75</span>%</strong>
                 </div>
-                <div class="room audio-room">
-                  <span>Müzik</span>
+                <div class="scene-item">
+                  <span>Muzik</span>
                   <strong id="music-output">enerjik oynatma listesi</strong>
                 </div>
-                <div class="room privacy-room">
-                  <span>Perde & Bildirim</span>
-                  <strong id="privacy-output">tam açık / standart bildirim düzeni</strong>
+                <div class="scene-item">
+                  <span>Perde ve bildirim</span>
+                  <strong id="privacy-output">tam acik / standart bildirim</strong>
                 </div>
+              </div>
+
+              <div class="summary-box">
+                <div class="badge-row">
+                  <span id="confidence-badge" class="info-chip strong">Yuksek guven</span>
+                  <span id="readiness-badge" class="info-chip">Sunum hazir</span>
+                </div>
+                <p id="summary-output">happy duygusu icin enerjik mod onerildi.</p>
+                <p id="note-output" class="muted">Senaryo modu: el ile secilen duygu kullanildi.</p>
               </div>
             </section>
 
-            <aside class="summary-card">
-              <div class="summary-head">
-                <div>
-                  <p class="section-kicker">Durum Özeti</p>
-                  <h2>Karar Açıklaması</h2>
-                </div>
-                <span id="confidence-output">0.82 güven</span>
-              </div>
-
-              <div class="summary-flags">
-                <span id="confidence-badge" class="info-chip strong">Yüksek güven</span>
-                <span id="readiness-badge" class="info-chip">Sunum hazır</span>
-              </div>
-
-              <p id="summary-output">
-                happy duygusu için enerjik mod önerildi.
-              </p>
-              <p id="note-output" class="muted">
-                Senaryo modu: el ile seçilen duygu kullanıldı.
-              </p>
-
+            <aside class="panel side-panel">
               <div class="preview-card">
-                <div class="preview-title">Yüklenen Fotoğraf</div>
-                <img id="preview-image" alt="Yüklenen görsel önizlemesi" hidden />
-                <p id="preview-placeholder" class="muted">Henüz fotoğraf seçilmedi.</p>
+                <div class="section-head small">
+                  <div>
+                    <p class="section-kicker">Gorsel</p>
+                    <h2>Onizleme</h2>
+                  </div>
+                </div>
+                <img id="preview-image" alt="Yuklenen gorsel onizlemesi" hidden />
+                <p id="preview-placeholder" class="muted">Fotograf secildiginde burada gorunur.</p>
+              </div>
+
+              <div class="probability-panel">
+                <div class="section-head small">
+                  <div>
+                    <p class="section-kicker">Dagilim</p>
+                    <h2>En guclu tahminler</h2>
+                  </div>
+                </div>
+                <div id="probability-list" class="probability-list"></div>
               </div>
             </aside>
           </div>
-
-          <section class="probability-panel">
-            <div class="panel-head inline">
-              <div>
-                <p class="section-kicker">Model Dağılımı</p>
-                <h2>Duygu Olasılıkları</h2>
-              </div>
-              <p>Modelin hangi sınıflar arasında kararsız kaldığını canlı olarak izle.</p>
-            </div>
-            <div id="probability-list" class="probability-list"></div>
-          </section>
         </section>
       </main>
     </div>

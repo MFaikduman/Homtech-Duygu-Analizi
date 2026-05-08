@@ -1,64 +1,220 @@
-# HOMTECH Duygu Analizi ve Akıllı Ev Senaryo Sistemi
+# HOMTECH Duygu Analizi ve Akilli Ev Senaryo Sistemi
 
-Bu proje, yüz ifadesinden duygu tahmini yapıp sonucu HOMTECH benzeri bir akıllı ev senaryosuna dönüştüren bir demo ve sunum sistemidir. Yapı; görüntü ön işleme, TensorFlow/Keras tabanlı model eğitimi, tek görselle tahmin, açıklanabilir karar motoru, yerel web arayüzü, sunum modülü ve masaüstü uygulama akışlarını bir araya getirir.
+HOMTECH, yuz ifadesinden duygu tahmini yapan ve bu sonucu akilli ev senaryolarina ceviren bir Python projesidir. Proje; TensorFlow/Keras modeli, FER-2013 veri setiyle egitim-degerlendirme akisi, tek gorselden tahmin, yerel web demo arayuzu ve opsiyonel Windows masaustu paketleme adimlarini icerir.
 
-## Proje Özeti
-
-- FER-2013 veri seti ile 7 sınıflı duygu tanıma akışı kurulur.
-- MobileNetV2 tabanlı transfer learning modeli eğitilir.
-- Tek görsel üzerinden duygu tahmini yapılır.
-- Tahmin sonucu ışık, sıcaklık, müzik, perde ve bildirim kararlarına çevrilir.
-- Yerel web arayüzü ile hem canlı demo hem de sunum yapılabilir.
-- İstenirse proje Windows masaüstü uygulaması olarak da paketlenebilir.
-
-## Temel Özellikler
-
-- 7 duygu sınıfı: `angry`, `disgust`, `fear`, `happy`, `sad`, `surprise`, `neutral`
-- FER stiline yaklaştırılmış `96x96` RGB model girdisi
-- Eğitim, değerlendirme ve tahmin komutları
-- Senaryo modu ve gerçek görsel analizi modu
-- Sunum için ayrı `/presentation` modülü
-- Masaüstü uygulama launcher ve `.exe` build akışı
+Bu repo bir `npm` projesi degildir. Web arayuzu Python'un yerel HTTP sunucusu uzerinden calisir.
 
 ## Teknolojiler
 
-- Python
+- Python 3.12
 - TensorFlow / Keras
-- NumPy
-- Pandas
+- NumPy, Pandas
 - scikit-learn
 - OpenCV
 - Pillow
-- Matplotlib
-- Seaborn
+- Matplotlib, Seaborn
 - HTML / CSS / JavaScript
-- pywebview
-- PyInstaller
+- Opsiyonel: pywebview, PyInstaller
 
-## Klasör Yapısı
+## Hizli Baslangic
+
+Komutlari `README.md` ve `requirements.txt` dosyalarinin bulundugu repo kokunde calistirin.
+
+```powershell
+git clone https://github.com/MFaikduman/Homtech-Duygu-Analizi.git
+cd Homtech-Duygu-Analizi
+uv venv --python 3.12 --seed .venv312
+.\.venv312\Scripts\Activate.ps1
+uv pip install -r requirements.txt
+python -m src.demo_web
+```
+
+Tarayicida su adresi acin:
 
 ```text
-YapayZekaModeli/
-|-- artifacts/
+http://127.0.0.1:8000
+```
+
+Windows icin hazir baslatma scripti de kullanilabilir:
+
+```powershell
+.\start_demo.ps1
+```
+
+PowerShell script calistirmayi engellerse:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start_demo.ps1
+```
+
+> Not: Ilk kurulumdan sonra web demo acilir. Egitilmis model yoksa gorsel analiz modu model isteyebilir; senaryo modu model olmadan calisir.
+
+## macOS / Linux Kurulum
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m src.demo_web
+```
+
+## Veri Seti
+
+Model egitimi ve gorsel tahmin icin FER-2013 veri seti gerekir:
+
+```text
+https://www.kaggle.com/datasets/msambare/fer2013
+```
+
+Veri setini su klasor yapisiyla yerlestirin:
+
+```text
+data/raw/fer2013/
+|-- train/
+|   |-- angry/
+|   |-- disgust/
+|   |-- fear/
+|   |-- happy/
+|   |-- neutral/
+|   |-- sad/
+|   `-- surprise/
+`-- test/
+    |-- angry/
+    |-- disgust/
+    |-- fear/
+    |-- happy/
+    |-- neutral/
+    |-- sad/
+    `-- surprise/
+```
+
+Veri setini kontrol etmek icin:
+
+```powershell
+python -m src.data.check_fer2013
+```
+
+## Model Egitimi
+
+```powershell
+python -m src.train
+```
+
+Egitim tamamlandiginda baslica su dosyalar olusur:
+
+- `artifacts/emotion_cnn.keras`
+- `artifacts/training_history.csv`
+
+Modeli degerlendirmek icin:
+
+```powershell
+python -m src.evaluate
+```
+
+Degerlendirme su dosyalari uretebilir:
+
+- `artifacts/confusion_matrix.png`
+- `artifacts/confusion_matrix.csv`
+- `artifacts/classification_report.txt`
+
+## Tek Gorselle Tahmin
+
+```powershell
+python -m src.predict --image "ornek_gorsel_yolu.jpg"
+```
+
+Yuz algilama yerine gorselin tamamini kullanmak icin:
+
+```powershell
+python -m src.predict --image "ornek_gorsel_yolu.jpg" --use-full-image
+```
+
+Baglam parametreleriyle:
+
+```powershell
+python -m src.predict --image "ornek_gorsel_yolu.jpg" --time-of-day evening --occupancy family --quiet-hours
+```
+
+## Senaryo Modu
+
+Model calistirmadan akilli ev senaryosu uretmek icin:
+
+```powershell
+python -m src.smart_home_demo --emotion sad --confidence 0.82 --time-of-day night --quiet-hours
+```
+
+## Kalite Kontrolleri
+
+Kaynak kodun import/syntax kontrolu:
+
+```powershell
+python -m compileall -q src
+```
+
+Hafif smoke testleri:
+
+```powershell
+python -m unittest discover -s tests
+```
+
+Bagimlilik uyumlulugu:
+
+```powershell
+uv pip check --python .\.venv312\Scripts\python.exe
+```
+
+GitHub Actions, `main` branch'ine push veya pull request geldiginde ayni compile ve smoke test akisini calistirir.
+
+## Web Demo
+
+```powershell
+python -m src.demo_web
+```
+
+Adresler:
+
+- Demo paneli: `http://127.0.0.1:8000/`
+- Sunum modu: `http://127.0.0.1:8000/presentation`
+- Saglik kontrolu: `http://127.0.0.1:8000/api/health`
+
+## Opsiyonel Masaustu Uygulama
+
+Masaustu uygulama web demoyu kendi penceresinde acar. Bu akis GitHub'dan calistirma icin zorunlu degildir.
+
+```powershell
+uv pip install -r requirements-desktop.txt
+.\start_desktop.ps1
+```
+
+Windows `.exe` paketi almak icin:
+
+```powershell
+.\build_desktop.ps1
+```
+
+Cikti klasoru:
+
+```text
+dist/HOMTECHMoodConsole/
+```
+
+## Proje Yapisi
+
+```text
+.
 |-- data/
 |   |-- raw/
-|   `-- processed/
+|   |-- processed/
+|   `-- sample_images/
 |-- notebooks/
 |-- reports/
 |-- scripts/
-|   `-- generate_app_icon.py
+|-- tests/
 |-- src/
 |   |-- data/
 |   |-- models/
 |   |-- web_demo/
-|   |   |-- index.html
-|   |   |-- app.js
-|   |   |-- styles.css
-|   |   |-- presentation.html
-|   |   |-- presentation.js
-|   |   |-- presentation.css
-|   |   |-- app_icon.png
-|   |   `-- app_icon.ico
 |   |-- config.py
 |   |-- demo_web.py
 |   |-- desktop_app.py
@@ -69,174 +225,28 @@ YapayZekaModeli/
 |   |-- smart_home.py
 |   |-- smart_home_demo.py
 |   `-- train.py
-|-- build_desktop.ps1
 |-- requirements.txt
 |-- requirements-desktop.txt
+|-- pyproject.toml
 |-- start_demo.ps1
 |-- start_desktop.ps1
+|-- build_desktop.ps1
 `-- README.md
 ```
 
-## Kurulum
+## GitHub Notlari
 
-TensorFlow tarafında uyumluluk için Python `3.12` önerilir.
+- Python surumu `.python-version` ile `3.12` olarak sabitlendi.
+- Paket metadata ve konsol scriptleri `pyproject.toml` icinde tutulur.
+- `main` branch'i icin `.github/workflows/ci.yml` smoke test workflow'u vardir.
+- Gercek API key, token veya parola gerekmiyor; bu nedenle `.env.example` dosyasina ihtiyac yok.
+- `.env`, sanal ortamlar, cache klasorleri, FER-2013 veri seti, egitilmis model/artifact dosyalari ve PyInstaller build ciktilari repoya eklenmemelidir.
+- `data/raw/`, `data/processed/`, `data/sample_images/`, `artifacts/`, `reports/` ve `notebooks/` klasorleri `.gitkeep` dosyalariyla bos halde tutulabilir.
+- Egitilmis model dosyasi buyuk oldugu icin GitHub'a koymak yerine `python -m src.train` ile yerelde uretin.
 
-```powershell
-uv venv --python 3.12 --seed .venv312
-.\.venv312\Scripts\Activate.ps1
-uv pip install -r requirements.txt
-```
+## Sorun Giderme
 
-Desktop uygulama tarafı için ek bağımlılıklar:
-
-```powershell
-uv pip install --python .\.venv312\Scripts\python.exe -r requirements-desktop.txt
-```
-
-## Veri Seti Hazırlama
-
-FER-2013 veri setini Kaggle üzerinden indir:
-
-`https://www.kaggle.com/datasets/msambare/fer2013`
-
-Veri setini şu yapıda yerleştir:
-
-```text
-data/raw/fer2013/
-|-- train/
-`-- test/
-```
-
-Kontrol komutları:
-
-```powershell
-python -m src.data.check_fer2013
-python -m src.data.inspect_preprocessing
-```
-
-## Model Eğitimi
-
-```powershell
-python -m src.train
-```
-
-Bu komut başlıca şu çıktıları üretir:
-
-- `artifacts/emotion_cnn.keras`
-- `artifacts/training_history.csv`
-
-## Değerlendirme
-
-```powershell
-python -m src.evaluate
-```
-
-Üretilen temel çıktılar:
-
-- `accuracy`
-- `precision`
-- `recall`
-- `f1-score`
-- classification report
-- confusion matrix
-
-Kaydedilen dosyalar:
-
-- `artifacts/confusion_matrix.png`
-- `artifacts/confusion_matrix.csv`
-- `artifacts/classification_report.txt`
-
-## Referans Sonuç
-
-Proje finalinde baz alınan en iyi test sonucu:
-
-- `accuracy`: `0.5348`
-- `precision`: `0.5417`
-- `recall`: `0.5348`
-- `weighted f1-score`: `0.5227`
-
-## Tek Görselle Tahmin
-
-```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg"
-```
-
-Tam görsel kullanımı:
-
-```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg" --use-full-image
-```
-
-Akıllı ev bağlamı ile:
-
-```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg" --time-of-day evening --occupancy family
-```
-
-## Akıllı Ev Senaryo Demosu
-
-Model çalıştırmadan doğrudan senaryo göstermek için:
-
-```powershell
-python -m src.smart_home_demo --emotion sad --confidence 0.82 --time-of-day night --quiet-hours
-```
-
-Bu akış; aydınlatma, parlaklık, sıcaklık, müzik, perde ve bildirim davranışlarını kural tabanlı olarak yorumlar.
-
-## Web Arayüzü
-
-Yerel demo arayüzünü başlatmak için en pratik yol:
-
-```powershell
-.\start_demo.ps1
-```
-
-Alternatif:
-
-```powershell
-python -m src.demo_web
-```
-
-Açılacak adresler:
-
-- Demo paneli: `http://127.0.0.1:8000/`
-- Sunum modülü: `http://127.0.0.1:8000/presentation`
-
-Arayüzde iki temel akış bulunur:
-
-- `Senaryo`: Duygu ve ev bağlamını elle seçerek akıllı ev sahnesi oluşturur.
-- `Görsel Analizi`: Yüklenen yüz fotoğrafı üzerinden tahmin yapar ve senaryo önerir.
-
-Sunum modülünde:
-
-- veri seti özeti
-- teknoloji yığını
-- model metrikleri
-- confusion matrix
-- ürün fikri ve sistem akışı
-
-tek bir localhost yapısı içinde gösterilebilir.
-
-## Masaüstü Uygulama
-
-Projeyi tarayıcı yerine kendi penceresinde açmak için:
-
-```powershell
-.\start_desktop.ps1
-```
-
-Windows `.exe` build almak için:
-
-```powershell
-.\build_desktop.ps1
-```
-
-Build çıktısı:
-
-- `dist/HOMTECHMoodConsole/HOMTECHMoodConsole.exe`
-
-Not: PyInstaller çıktısında yalnızca `.exe` değil, tüm `dist/HOMTECHMoodConsole` klasörü birlikte taşınmalıdır.
-
-## Projenin Amacı
-
-Bu çalışma, duygu analizi ile akıllı ev otomasyonu arasında uygulamalı bir köprü kurmayı hedefler. Amaç yalnızca bir sınıflandırma modeli geliştirmek değil, modeli gerçek hayata yaklaşan bir ürün deneyimi ile birleştirmektir.
+- `Egitilmis model bulunamadi` hatasi: `python -m src.train` ile modeli egitin veya web demoda senaryo modunu kullanin.
+- TensorFlow kurulum sorunu: Python 3.12 kullandiginizdan emin olun.
+- PowerShell script hatasi: `powershell -ExecutionPolicy Bypass -File .\start_demo.ps1` komutunu deneyin.
+- Veri seti bulunamadi hatasi: FER-2013 klasorlerini `data/raw/fer2013/` altina yerlestirin.

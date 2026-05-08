@@ -6,26 +6,31 @@ from tensorflow import keras
 
 from src.config import (
     ARTIFACTS_DIR,
+    EARLY_STOPPING_PATIENCE,
     EPOCHS,
+    FINE_TUNE_LABEL_SMOOTHING,
     FINE_TUNE_LEARNING_RATE,
     HISTORY_PATH,
     MODEL_PATH,
+    REDUCE_LR_PATIENCE,
 )
 from src.data.data_loader import load_datasets
 from src.models.build_model import build_baseline_model, unfreeze_for_fine_tuning
 
 
 def build_callbacks():
+    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+
     return [
         keras.callbacks.EarlyStopping(
-            monitor="val_accuracy",
-            patience=5,
+            monitor="val_loss",
+            patience=EARLY_STOPPING_PATIENCE,
             restore_best_weights=True,
         ),
         keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.5,
-            patience=2,
+            patience=REDUCE_LR_PATIENCE,
             min_lr=1e-6,
         ),
         keras.callbacks.ModelCheckpoint(
@@ -86,7 +91,7 @@ def main() -> None:
     model = unfreeze_for_fine_tuning(model, base_model)
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=FINE_TUNE_LEARNING_RATE),
-        loss=keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+        loss=keras.losses.CategoricalCrossentropy(label_smoothing=FINE_TUNE_LABEL_SMOOTHING),
         metrics=["accuracy"],
     )
 

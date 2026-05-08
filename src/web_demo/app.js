@@ -1,4 +1,4 @@
-const tabs = document.querySelectorAll(".tab");
+﻿const tabs = document.querySelectorAll(".tab");
 const panes = document.querySelectorAll(".form-pane");
 const scenarioForm = document.querySelector("#scenario-form");
 const analysisForm = document.querySelector("#analysis-form");
@@ -13,19 +13,21 @@ const probabilityList = document.querySelector("#probability-list");
 const heroJumpButtons = document.querySelectorAll("[data-jump-tab]");
 const analysisCopy = document.querySelector("#analysis-copy");
 const analysisSubmitButton = analysisForm.querySelector('button[type="submit"]');
+const warmupButton = document.querySelector("#warmup-button");
 let predictionAvailable = false;
 let predictionLoading = false;
 let predictionError = "";
 let healthPollTimer = null;
+let warmupRequested = false;
 
 const emotionLabels = {
-  angry: "Öfkeli",
-  disgust: "İğrenme",
+  angry: "Ofkeli",
+  disgust: "Igrenme",
   fear: "Korku",
   happy: "Mutlu",
-  sad: "Üzgün",
-  surprise: "Şaşırmış",
-  neutral: "Nötr",
+  sad: "Uzgün",
+  surprise: "Saskin",
+  neutral: "Notr",
 };
 
 const outputRefs = {
@@ -46,30 +48,20 @@ const outputRefs = {
 };
 
 function getReadyStatusLabel() {
-  if (predictionAvailable) {
-    return "Hazır";
-  }
-  if (predictionLoading) {
-    return "Yükleniyor";
-  }
-  return "Senaryo hazır";
+  if (predictionAvailable) return "Hazir";
+  if (predictionLoading) return "Yukleniyor";
+  return "Senaryo hazir";
 }
 
 function getReadyStatusDetail() {
-  if (predictionAvailable) {
-    return "Tahmin modeli ve senaryo motoru hazir.";
-  }
-  if (predictionLoading) {
-    return "Tahmin modeli arka planda yükleniyor. Analiz birazdan aktif olacak.";
-  }
-  return predictionError || "Tahmin modeli yok; senaryo modu kullanılabilir.";
+  if (predictionAvailable) return "Analiz ve senaryo kullanima hazir.";
+  if (predictionLoading) return "Model arka planda yukleniyor. Birazdan analiz acilacak.";
+  return predictionError || "Hizli baslangic icin analiz modeli henuz yuklenmedi.";
 }
 
 function setStatus(text, detail = "") {
   statusPill.textContent = text;
-  if (statusDetail) {
-    statusDetail.textContent = detail;
-  }
+  statusDetail.textContent = detail;
 }
 
 function setAnalysisAvailability(isAvailable, message) {
@@ -89,14 +81,9 @@ function clearSelectedFile() {
   updateSelectedFile(null);
 }
 
-function scheduleHealthRefresh(delay = 3000) {
-  if (healthPollTimer) {
-    clearTimeout(healthPollTimer);
-  }
-
-  healthPollTimer = window.setTimeout(() => {
-    refreshHealth();
-  }, delay);
+function scheduleHealthRefresh(delay = 2500) {
+  if (healthPollTimer) clearTimeout(healthPollTimer);
+  healthPollTimer = window.setTimeout(() => refreshHealth(), delay);
 }
 
 function applyHealth(health) {
@@ -105,21 +92,18 @@ function applyHealth(health) {
   predictionError = health.model_error || "";
 
   if (predictionAvailable) {
-    setAnalysisAvailability(
-      true,
-      "Tek kişilik, önde ve iyi ışık alan bir fotoğraf kullanırsan model daha tutarlı sonuç verir.",
-    );
+    setAnalysisAvailability(true, "Fotografi secip dogrudan analiz edebilirsin.");
+    warmupButton.disabled = true;
+    warmupButton.textContent = "Model hazir";
   } else if (predictionLoading) {
-    setAnalysisAvailability(
-      false,
-      "Tahmin modeli arka planda yükleniyor. Birazdan analiz butonu aktif olacak.",
-    );
+    setAnalysisAvailability(false, "Model yukleniyor. Bu sirada senaryo modunu kullanabilirsin.");
+    warmupButton.disabled = true;
+    warmupButton.textContent = "Hazirlaniyor";
     scheduleHealthRefresh();
   } else {
-    setAnalysisAvailability(
-      false,
-      "Tahmin modeli kullanılamıyor. Senaryo modunu kullanmaya devam edebilirsin.",
-    );
+    setAnalysisAvailability(false, "Analiz icin once modeli hazirla. Baslangici hizlandirmak icin otomatik acilmiyor.");
+    warmupButton.disabled = false;
+    warmupButton.textContent = "Modeli Hazirla";
   }
 
   setStatus(getReadyStatusLabel(), getReadyStatusDetail());
@@ -134,28 +118,47 @@ async function refreshHealth() {
     predictionAvailable = false;
     predictionLoading = false;
     predictionError = "";
-    setAnalysisAvailability(
-      false,
-      "Sunucuya bağlanılamadığı için analiz modu geçici olarak kullanılamıyor.",
-    );
-    setStatus("Sunucu yok", "API şu an erişilebilir değil.");
+    warmupButton.disabled = true;
+    setAnalysisAvailability(false, "Sunucuya baglanilamadigi icin analiz gecici olarak kapali.");
+    setStatus("Sunucu yok", "API erisilebilir degil.");
+  }
+}
+
+async function requestWarmup() {
+  if (predictionAvailable || predictionLoading) return;
+  warmupRequested = true;
+  warmupButton.disabled = true;
+  warmupButton.textContent = "Hazirlaniyor";
+  setStatus("Yukleniyor", "Analiz modeli arka planda baslatiliyor.");
+
+  try {
+    const response = await fetch("/api/warmup-model", { method: "POST" });
+    const data = await response.json();
+    applyHealth(data);
+  } catch (error) {
+    warmupButton.disabled = false;
+    warmupButton.textContent = "Modeli Hazirla";
+    setStatus("Hata", "Model baslatilamadi.");
+  }
+}
+
+function setActiveTab(tabName) {
+  tabs.forEach((button) => button.classList.toggle("active", button.dataset.tab === tabName));
+  panes.forEach((pane) => pane.classList.toggle("active", pane.id === `${tabName}-form`));
+
+  if (tabName === "analysis" && !warmupRequested && !predictionAvailable && !predictionLoading) {
+    requestWarmup();
   }
 }
 
 tabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
-    tabs.forEach((button) => button.classList.remove("active"));
-    panes.forEach((pane) => pane.classList.remove("active"));
-    tab.classList.add("active");
-    document.querySelector(`#${tab.dataset.tab}-form`).classList.add("active");
-  });
+  tab.addEventListener("click", () => setActiveTab(tab.dataset.tab));
 });
 
 heroJumpButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const targetTab = document.querySelector(`.tab[data-tab="${button.dataset.jumpTab}"]`);
-    targetTab?.click();
-    targetTab?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setActiveTab(button.dataset.jumpTab);
+    document.querySelector(`#${button.dataset.jumpTab}-form`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });
 
@@ -176,7 +179,7 @@ document.querySelectorAll('.toggle input[type="checkbox"]').forEach((checkbox) =
 });
 
 function updateSelectedFile(file) {
-  fileName.textContent = file ? file.name : "Henüz dosya seçilmedi";
+  fileName.textContent = file ? file.name : "Dosya secilmedi";
   if (!file) {
     previewImage.hidden = true;
     previewImage.removeAttribute("src");
@@ -197,20 +200,16 @@ fileInput.addEventListener("change", () => {
   const [file] = fileInput.files;
   if (file && !isSupportedImage(file)) {
     clearSelectedFile();
-    setStatus("Geçersiz dosya", "Yalnızca görsel dosyaları kabul ediliyor.");
-    outputRefs.note.textContent = "Lütfen JPG, PNG veya benzeri bir görsel dosyası seç.";
+    setStatus("Gecersiz dosya", "Yalnizca gorsel dosyalari kabul ediliyor.");
+    outputRefs.note.textContent = "Lutfen JPG veya PNG gibi bir gorsel sec.";
     return;
   }
 
   updateSelectedFile(file);
   if (file) {
     setStatus(
-      predictionAvailable ? "Fotoğraf hazır" : getReadyStatusLabel(),
-      predictionAvailable
-        ? "Fotoğraf seçildi; analiz isteği gönderilebilir."
-        : predictionLoading
-          ? "Fotoğraf seçildi. Model yüklenince analiz aktif olacak."
-          : "Fotoğraf seçildi ama tahmin modeli şu an hazır değil.",
+      predictionAvailable ? "Fotograf hazir" : getReadyStatusLabel(),
+      predictionAvailable ? "Fotograf secildi. Analiz baslatilabilir." : getReadyStatusDetail(),
     );
   }
 });
@@ -232,8 +231,8 @@ fileInput.addEventListener("change", () => {
 fileDropZone.addEventListener("drop", (event) => {
   const [file] = event.dataTransfer.files;
   if (!isSupportedImage(file)) {
-    setStatus("Geçersiz dosya", "Yalnızca görsel dosyaları kabul ediliyor.");
-    outputRefs.note.textContent = "Lütfen yalnızca bir görsel dosyası sürükleyip bırak.";
+    setStatus("Gecersiz dosya", "Yalnizca gorsel dosyalari kabul ediliyor.");
+    outputRefs.note.textContent = "Lutfen tek bir gorsel dosyasi birak.";
     return;
   }
 
@@ -241,15 +240,7 @@ fileDropZone.addEventListener("drop", (event) => {
   dataTransfer.items.add(file);
   fileInput.files = dataTransfer.files;
   updateSelectedFile(file);
-  setStatus(
-    predictionAvailable ? "Fotoğraf hazır" : getReadyStatusLabel(),
-    predictionAvailable
-      ? "Fotoğraf seçildi; analiz isteği gönderilebilir."
-      : predictionLoading
-        ? "Fotoğraf seçildi. Model yüklenince analiz aktif olacak."
-        : "Fotoğraf seçildi ama tahmin modeli şu an hazır değil.",
-  );
-  outputRefs.note.textContent = "Fotoğraf alındı. Analiz için butona basabilirsin.";
+  outputRefs.note.textContent = "Fotograf alindi. Analiz icin butona bas.";
 });
 
 function collectFormState(form) {
@@ -263,36 +254,31 @@ function collectFormState(form) {
 
 function renderProbabilities(probabilities) {
   probabilityList.innerHTML = "";
-  const entries = Object.entries(probabilities || {});
+  const entries = Object.entries(probabilities || {}).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
   if (!entries.length) {
-    probabilityList.innerHTML = "<p class='muted'>Senaryo modunda olasılık dağılımı gösterilmiyor.</p>";
+    probabilityList.innerHTML = "<p class='muted'>Senaryo modunda olasilik gosterilmiyor.</p>";
     return;
   }
 
-  entries
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([label, score]) => {
-      const item = document.createElement("div");
-      item.className = "probability-item";
-      item.innerHTML = `
-        <span>${emotionLabels[label] || label}</span>
-        <div class="probability-track">
-          <div class="probability-fill" style="width:${(score * 100).toFixed(1)}%"></div>
-        </div>
-        <strong>${(score * 100).toFixed(1)}%</strong>
-      `;
-      probabilityList.appendChild(item);
-    });
+  entries.forEach(([label, score]) => {
+    const item = document.createElement("div");
+    item.className = "probability-item";
+    item.innerHTML = `
+      <span>${emotionLabels[label] || label}</span>
+      <div class="probability-track">
+        <div class="probability-fill" style="width:${(score * 100).toFixed(1)}%"></div>
+      </div>
+      <strong>${(score * 100).toFixed(1)}%</strong>
+    `;
+    probabilityList.appendChild(item);
+  });
 }
 
 function describeConfidence(score) {
-  if (score >= 0.75) {
-    return "Yüksek güven";
-  }
-  if (score >= 0.55) {
-    return "Orta güven";
-  }
-  return "Düşük güven";
+  if (score >= 0.75) return "Yuksek guven";
+  if (score >= 0.55) return "Orta guven";
+  return "Dusuk guven";
 }
 
 function renderResult(payload) {
@@ -306,17 +292,16 @@ function renderResult(payload) {
   outputRefs.music.textContent = plan.music_scene;
   outputRefs.privacy.textContent = `${plan.blinds_position} / ${plan.notification_policy}`;
   outputRefs.source.textContent = payload.source === "prediction" ? "Model analizi" : "Senaryo modu";
-  outputRefs.confidence.textContent = `${plan.confidence.toFixed(2)} güven`;
+  outputRefs.confidence.textContent = `${plan.confidence.toFixed(2)} guven`;
   outputRefs.summary.textContent = plan.summary;
   outputRefs.note.textContent = payload.preprocessing_note;
   outputRefs.confidenceBadge.textContent = describeConfidence(plan.confidence);
-  outputRefs.readinessBadge.textContent =
-    plan.confidence >= 0.6 ? "Otomasyon adayı" : "Onay önerilir";
+  outputRefs.readinessBadge.textContent = plan.confidence >= 0.6 ? "Uygulanabilir" : "Onay oner";
   renderProbabilities(payload.probabilities);
 }
 
 async function sendJson(url, payload) {
-  setStatus("Çalışıyor", "İstek işleniyor.");
+  setStatus("Calisiyor", "Istek isleniyor.");
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -324,7 +309,7 @@ async function sendJson(url, payload) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Beklenmeyen bir hata oluştu");
+    throw new Error(data.error || "Beklenmeyen hata olustu");
   }
   setStatus(getReadyStatusLabel(), getReadyStatusDetail());
   return data;
@@ -349,29 +334,26 @@ scenarioForm.addEventListener("submit", async (event) => {
 analysisForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!predictionAvailable) {
-    setStatus(
-      predictionLoading ? "Yükleniyor" : "Tahmin kapalı",
-      predictionLoading
-        ? "Tahmin modeli arka planda yükleniyor."
-        : "Tahmin modeli şu an kullanılamıyor.",
-    );
+    if (!predictionLoading) {
+      await requestWarmup();
+    }
     outputRefs.note.textContent = predictionLoading
-      ? "Model yüklenirken senaryo modunu kullanabilir veya biraz sonra tekrar deneyebilirsin."
-      : "Analiz modunu kullanmak için modelin yüklenmiş olması gerekiyor.";
+      ? "Model yuklenirken biraz bekleyip tekrar deneyebilirsin."
+      : "Analiz icin modelin hazir olmasi gerekiyor.";
     return;
   }
 
   const file = fileInput.files[0];
   if (!file) {
-    setStatus("Dosya gerekli", "Analiz için bir görsel seçilmedi.");
-    outputRefs.note.textContent = "Analiz için önce bir görsel seç.";
+    setStatus("Dosya gerekli", "Analiz icin bir gorsel sec.");
+    outputRefs.note.textContent = "Analizden once bir fotograf sec.";
     return;
   }
 
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Dosya okunurken hata oluştu"));
+    reader.onerror = () => reject(new Error("Dosya okunurken hata olustu"));
     reader.readAsDataURL(file);
   });
 
@@ -389,8 +371,12 @@ analysisForm.addEventListener("submit", async (event) => {
   }
 });
 
+warmupButton.addEventListener("click", () => {
+  requestWarmup();
+});
+
 async function boot() {
-  setStatus("Kontrol", "Sunucu ve model durumu kontrol ediliyor.");
+  setStatus("Kontrol", "Sunucu durumu kontrol ediliyor.");
   await refreshHealth();
 
   const initialScenario = {
@@ -399,24 +385,19 @@ async function boot() {
       confidence: 0.82,
       suggested_mode: "enerjik mod",
       automation_state: "otomatik uygulanabilir",
-      lighting_scene: "canlı ve parlak aydınlatma",
+      lighting_scene: "canli ve parlak aydinlatma",
       brightness_percent: 75,
       temperature_celsius: 21,
       music_scene: "enerjik oynatma listesi",
-      blinds_position: "tam açık",
-      notification_policy: "standart bildirim düzeni",
-      summary: "happy duygusu için enerjik mod önerildi. Ortam: canlı ve parlak aydınlatma, müzik: enerjik oynatma listesi.",
+      blinds_position: "tam acik",
+      notification_policy: "standart bildirim duzeni",
+      summary: "happy duygusu icin enerjik mod onerildi.",
     },
     source: "scenario",
     probabilities: {},
-    preprocessing_note: "Senaryo modu: el ile seçilen duygu kullanıldı.",
+    preprocessing_note: "Senaryo modu: el ile secilen duygu kullanildi.",
   };
   renderResult(initialScenario);
-  if (!predictionAvailable) {
-    outputRefs.note.textContent = predictionLoading
-      ? "Tahmin modeli arka planda yükleniyor; birazdan analiz kullanılabilir olacak."
-      : "Tahmin modeli hazır değil; senaryo modu ile devam edebilirsin.";
-  }
 }
 
 boot();

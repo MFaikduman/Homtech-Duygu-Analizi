@@ -1,4 +1,4 @@
-const body = document.body;
+﻿const body = document.body;
 const slideRefs = Array.from(document.querySelectorAll(".slide"));
 const navLinks = Array.from(document.querySelectorAll(".rail-nav a"));
 const titleRef = document.querySelector("#project-title");
@@ -25,6 +25,8 @@ const matrixImageRef = document.querySelector("#matrix-image");
 const trainingCardsRef = document.querySelector("#training-cards");
 const resultsSummaryRef = document.querySelector("#results-summary");
 const resultsSpotlightRef = document.querySelector("#results-spotlight");
+const literatureSummaryRef = document.querySelector("#literature-summary");
+const literatureBarsRef = document.querySelector("#literature-bars");
 const trainingSummaryRef = document.querySelector("#training-summary");
 const highlightGridRef = document.querySelector("#highlight-grid");
 const matrixCaptionRef = document.querySelector("#matrix-caption");
@@ -40,15 +42,14 @@ const prevSlideButton = document.querySelector("#prev-slide");
 const nextSlideButton = document.querySelector("#next-slide");
 
 const slideTitles = {
-  hero: "Özet",
+  hero: "Ozet",
   dataset: "Veri Seti",
-  pipeline: "Akış",
-  results: "Sonuçlar",
+  pipeline: "Akis",
+  results: "Sonuclar",
   matrix: "Confusion Matrix",
-  product: "Ürün Fikri",
+  product: "Urun Fikri",
 };
 
-let presentationData = null;
 let currentSlideIndex = 0;
 
 function formatPercent(value) {
@@ -56,6 +57,13 @@ function formatPercent(value) {
     return "-";
   }
   return `%${(Number(value) * 100).toFixed(1)}`;
+}
+
+function formatRawPercent(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return "-";
+  }
+  return `%${Number(value).toFixed(2)}`;
 }
 
 function formatNumber(value) {
@@ -84,12 +92,12 @@ function renderSplitOverview(dataset) {
     <article class="split-card">
       <span>Train</span>
       <strong>${formatNumber(dataset.train_total)}</strong>
-      <p>${dataset.name || "FER-2013"} eğitim görseli</p>
+      <p>${dataset.name || "FER-2013"} egitim gorseli</p>
     </article>
     <article class="split-card">
       <span>Test</span>
       <strong>${formatNumber(dataset.test_total)}</strong>
-      <p>Model değerlendirme görseli</p>
+      <p>Model degerlendirme gorseli</p>
     </article>
   `;
 }
@@ -117,10 +125,10 @@ function renderPipeline(story) {
 
 function renderHeroTags(project, dataset, evaluation) {
   const tags = [
-    `${project.emotion_labels.length} duygu sınıfı`,
+    `${project.emotion_labels.length} duygu sinifi`,
     `${project.image_size.width}x${project.image_size.height} girdi`,
-    `${formatNumber(dataset.total_images)} toplam görsel`,
-    `${formatPercent(evaluation.current_report.overall.accuracy)} artifact accuracy`,
+    `${formatNumber(dataset.total_images)} toplam gorsel`,
+    `${formatPercent(evaluation.current_report.overall?.accuracy)} artifact accuracy`,
   ];
 
   heroTagsRef.innerHTML = "";
@@ -137,17 +145,17 @@ function renderSpotlight(dataset, evaluation) {
   const weakest = evaluation.current_report.weakest_class;
   const reported = evaluation.reported_best_metrics || {};
 
-  spotlightTitleRef.textContent = "Teknik sonuçtan ürün hikâyesine";
+  spotlightTitleRef.textContent = "Teknik sonuctan urun hikayesine";
   spotlightCopyRef.textContent =
-    "Model çıktısı, akıllı ev bağlamında yorumlanabilir kararlar ve kullanıcı deneyimi ile birlikte ele alınıyor.";
+    "Model ciktisi, akilli ev baglaminda yorumlanabilir kararlar ve kullanici deneyimi ile birlikte ele aliniyor.";
 
   spotlightGridRef.innerHTML = `
     <article class="spotlight-item">
-      <span>En güçlü sınıf</span>
+      <span>En guclu sinif</span>
       <strong>${strongest ? strongest.label : "-"}</strong>
     </article>
     <article class="spotlight-item">
-      <span>Gelişim alanı</span>
+      <span>Gelisim alani</span>
       <strong>${weakest ? weakest.label : "-"}</strong>
     </article>
     <article class="spotlight-item">
@@ -155,7 +163,7 @@ function renderSpotlight(dataset, evaluation) {
       <strong>${formatPercent(reported.accuracy)}</strong>
     </article>
     <article class="spotlight-item">
-      <span>Veri dengesizliği</span>
+      <span>Veri dengesizligi</span>
       <strong>${dataset.dominant_class} / ${dataset.rarest_class}</strong>
     </article>
   `;
@@ -164,25 +172,25 @@ function renderSpotlight(dataset, evaluation) {
 function renderHeroSummaryBand(dataset, evaluation) {
   heroSummaryBandRef.innerHTML = `
     <article class="summary-band-item">
-      <span>Veri kapsamı</span>
+      <span>Veri kapsami</span>
       <strong>${formatNumber(dataset.train_total)} train / ${formatNumber(dataset.test_total)} test</strong>
-      <p>Benchmark veri seti üzerinden eğitim ve değerlendirme akışı kuruldu.</p>
+      <p>Benchmark veri seti uzerinden egitim ve degerlendirme akisi kuruldu.</p>
     </article>
     <article class="summary-band-item">
       <span>Model sonucu</span>
-      <strong>${formatPercent(evaluation.current_report.overall.accuracy)} accuracy</strong>
-      <p>Sınıf bazlı farklılıkları okumak için F1 ve confusion matrix ile desteklendi.</p>
+      <strong>${formatPercent(evaluation.current_report.overall?.accuracy)} accuracy</strong>
+      <p>Sinif bazli farkliliklari okumak icin F1 ve confusion matrix ile desteklendi.</p>
     </article>
     <article class="summary-band-item">
-      <span>Ürün çıktısı</span>
-      <strong>Duygudan senaryoya geçiş</strong>
-      <p>Tahmin edilen ifade, ışık, sıcaklık, müzik ve bildirim kararlarına bağlandı.</p>
+      <span>Urun ciktisi</span>
+      <strong>Duygudan senaryoya gecis</strong>
+      <p>Tahmin edilen ifade, isik, sicaklik, muzik ve bildirim kararlarina baglandi.</p>
     </article>
   `;
 }
 
 function renderOverallMetrics(evaluation) {
-  const overall = evaluation.current_report.overall;
+  const overall = evaluation.current_report.overall || {};
   const weighted = overall.weighted_avg || {};
   const macro = overall.macro_avg || {};
   const reported = evaluation.reported_best_metrics || {};
@@ -196,12 +204,12 @@ function renderOverallMetrics(evaluation) {
     <article class="overall-card">
       <span>Weighted F1</span>
       <strong>${formatPercent(weighted.f1_score)}</strong>
-      <p>Dengesiz sınıflara daha uygun genel kalite göstergesi</p>
+      <p>Dengesiz siniflara daha uygun genel kalite gostergesi</p>
     </article>
     <article class="overall-card">
       <span>Macro F1</span>
       <strong>${formatPercent(macro.f1_score)}</strong>
-      <p>Sınıflar arası daha eşit bakış veren ortalama</p>
+      <p>Siniflar arasi daha esit bakis veren ortalama</p>
     </article>
     <article class="overall-card">
       <span>README Zirve</span>
@@ -212,30 +220,30 @@ function renderOverallMetrics(evaluation) {
 }
 
 function renderTrainingCards(evaluation) {
-  const training = evaluation.training;
+  const training = evaluation.training || {};
   const strongest = evaluation.current_report.strongest_class;
   const weakest = evaluation.current_report.weakest_class;
 
   trainingCardsRef.innerHTML = `
     <article class="training-card">
-      <span>En İyi Epoch</span>
+      <span>En Iyi Epoch</span>
       <strong>${training.best_epoch || "-"}</strong>
       <p>Val accuracy zirvesi: ${formatPercent(training.best_val_accuracy)}</p>
     </article>
     <article class="training-card">
       <span>Toplam Epoch</span>
       <strong>${training.epochs || "-"}</strong>
-      <p>Kayıtlı eğitim geçmişinin toplamı</p>
+      <p>Kayitli egitim gecmisinin toplami</p>
     </article>
     <article class="training-card">
-      <span>En Güçlü Sınıf</span>
+      <span>En Guclu Sinif</span>
       <strong>${strongest ? strongest.label : "-"}</strong>
-      <p>${strongest ? `F1: ${formatPercent(strongest.f1_score)}` : "Sınıf metriği bulunamadı."}</p>
+      <p>${strongest ? `F1: ${formatPercent(strongest.f1_score)}` : "Sinif metrigi bulunamadi."}</p>
     </article>
     <article class="training-card">
-      <span>Gelişime Açık Sınıf</span>
+      <span>Gelisime Acik Sinif</span>
       <strong>${weakest ? weakest.label : "-"}</strong>
-      <p>${weakest ? `F1: ${formatPercent(weakest.f1_score)}` : "Sınıf metriği bulunamadı."}</p>
+      <p>${weakest ? `F1: ${formatPercent(weakest.f1_score)}` : "Sinif metrigi bulunamadi."}</p>
     </article>
   `;
 }
@@ -248,21 +256,44 @@ function renderHighlights(evaluation) {
 
   highlightGridRef.innerHTML = `
     <article class="highlight-card">
-      <span>En Güçlü Sınıf</span>
+      <span>En Guclu Sinif</span>
       <strong>${strongest ? strongest.label : "-"}</strong>
-      <p>${strongest ? `F1 skoru ${formatPercent(strongest.f1_score)} seviyesinde.` : "Veri bulunamadı."}</p>
+      <p>${strongest ? `F1 skoru ${formatPercent(strongest.f1_score)} seviyesinde.` : "Veri bulunamadi."}</p>
     </article>
     <article class="highlight-card">
-      <span>En Yüksek Recall</span>
+      <span>En Yuksek Recall</span>
       <strong>${highestRecall ? highestRecall.label : "-"}</strong>
-      <p>${highestRecall ? `Recall değeri ${formatPercent(highestRecall.recall)}.` : "Veri bulunamadı."}</p>
+      <p>${highestRecall ? `Recall degeri ${formatPercent(highestRecall.recall)}.` : "Veri bulunamadi."}</p>
     </article>
     <article class="highlight-card">
-      <span>Öncelikli İyileştirme</span>
+      <span>Oncelikli Iyilestirme</span>
       <strong>${weakest ? weakest.label : "-"}</strong>
-      <p>${weakest ? `F1 skoru ${formatPercent(weakest.f1_score)} ile gelişim alanı taşıyor.` : "Veri bulunamadı."}</p>
+      <p>${weakest ? `F1 skoru ${formatPercent(weakest.f1_score)} ile gelisim alani tasiyor.` : "Veri bulunamadi."}</p>
     </article>
   `;
+}
+
+function renderLiterature(literature) {
+  if (!literature) {
+    literatureSummaryRef.textContent = "Literatur verisi bulunamadi.";
+    literatureBarsRef.innerHTML = "";
+    return;
+  }
+
+  literatureSummaryRef.textContent = literature.summary || "Literatur verisi bulunamadi.";
+
+  const benchmarks = literature.benchmarks || [];
+  const maxAccuracy = benchmarks.reduce((maxValue, item) => Math.max(maxValue, item.accuracy || 0), 0);
+
+  renderBars(
+    literatureBarsRef,
+    benchmarks.map((item) => ({
+      label: `${item.short_label || item.label} ${item.year ? `(${item.year})` : ""}`.trim(),
+      value: item.accuracy,
+    })),
+    maxAccuracy,
+    formatRawPercent,
+  );
 }
 
 function updateProgress() {
@@ -301,21 +332,21 @@ function showSlide(index, options = {}) {
 function setTheme(theme) {
   const darkTheme = theme === "dark";
   body.classList.toggle("theme-dark", darkTheme);
-  themeToggleButton.textContent = darkTheme ? "Beyaz Tema" : "Koyu Moda Geç";
+  themeToggleButton.textContent = darkTheme ? "Beyaz Tema" : "Koyu Moda Gec";
   window.localStorage.setItem("presentation-theme", darkTheme ? "dark" : "light");
 }
 
 function setPresentationMode(enabled) {
   body.classList.toggle("presentation-mode", enabled);
   slideControlsRef.hidden = !enabled;
-  presentationToggleButton.textContent = enabled ? "Akış Modu" : "Sunum Modu";
+  presentationToggleButton.textContent = enabled ? "Akis Modu" : "Sunum Modu";
   showSlide(currentSlideIndex, { scroll: !enabled });
 }
 
 async function toggleFullscreen() {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen();
-    fullscreenToggleButton.textContent = "Tam Ekrandan Çık";
+    fullscreenToggleButton.textContent = "Tam Ekrandan Cik";
     return;
   }
 
@@ -324,21 +355,21 @@ async function toggleFullscreen() {
 }
 
 function applyData(payload) {
-  presentationData = payload;
-  const { project, dataset, evaluation, story } = payload;
+  const { project, dataset, evaluation, literature, story } = payload;
   const currentReport = evaluation.current_report;
   const strongest = currentReport.strongest_class;
   const weakest = currentReport.weakest_class;
-  const training = evaluation.training;
+  const training = evaluation.training || {};
   const dominantClass = dataset.dominant_class;
   const rarestClass = dataset.rarest_class;
+  const reportedBestMetrics = evaluation.reported_best_metrics || {};
 
   titleRef.textContent = project.title;
   subtitleRef.textContent = project.subtitle;
   goalRef.textContent = project.goal;
   datasetTotalRef.textContent = formatNumber(dataset.total_images);
-  currentAccuracyRef.textContent = formatPercent(currentReport.overall.accuracy);
-  reportedAccuracyRef.textContent = formatPercent(evaluation.reported_best_metrics.accuracy);
+  currentAccuracyRef.textContent = formatPercent(currentReport.overall?.accuracy);
+  reportedAccuracyRef.textContent = formatPercent(reportedBestMetrics.accuracy);
   bestValAccuracyRef.textContent = formatPercent(training.best_val_accuracy);
   imageSizeRef.textContent = `${project.image_size.width}x${project.image_size.height}`;
   renderHeroTags(project, dataset, evaluation);
@@ -346,8 +377,8 @@ function applyData(payload) {
   renderHeroSummaryBand(dataset, evaluation);
 
   datasetSummaryRef.textContent =
-    `Toplam ${formatNumber(dataset.total_images)} görselden oluşan FER-2013 yapısı kullanıldı. ` +
-    `En yoğun sınıf ${dominantClass}, en düşük temsile sahip sınıf ise ${rarestClass}.`;
+    `Toplam ${formatNumber(dataset.total_images)} gorselden olusan FER-2013 yapisi kullanildi. ` +
+    `En yogun sinif ${dominantClass}, en dusuk temsile sahip sinif ise ${rarestClass}.`;
 
   renderSplitOverview(dataset);
   renderBars(
@@ -366,22 +397,23 @@ function applyData(payload) {
     formatPercent,
   );
   renderHighlights(evaluation);
+  renderLiterature(literature);
 
   matrixImageRef.src = evaluation.confusion_matrix.image_path || "";
   matrixImageRef.hidden = !evaluation.confusion_matrix.image_path;
 
   resultsSummaryRef.textContent =
-    `Artifact değerlendirmesinde en güçlü sınıf ${strongest?.label || "-"} olurken, ` +
-    `en çok zorlanan sınıf ${weakest?.label || "-"} olarak görünüyor. ` +
-    `Bu tablo, modelin mutlu ve şaşırma gibi daha ayrık ifadelerde daha iyi sonuç verdiğini gösteriyor.`;
+    `Artifact degerlendirmesinde en guclu sinif ${strongest?.label || "-"} olurken, ` +
+    `en cok zorlanan sinif ${weakest?.label || "-"} olarak gorunuyor. ` +
+    `Literatur karsilastirmasi, bu prototipin daha cok gelistirme payi oldugunu netlestiriyor.`;
   resultsSpotlightRef.textContent =
-    `Accuracy tek başına yeterli bir ölçüt değil. Sınıf bazlı farkları, hata örüntülerini ve bu modelin HOMTECH için nasıl yorumlanabilir bir karar katmanına dönüştüğünü birlikte okumak daha anlamlı bir çerçeve sunuyor.`;
+    `Accuracy tek basina yeterli bir olcut degil. Sinif bazli farklari, hata oruntulerini ve bu modelin HOMTECH icin nasil yorumlanabilir bir karar katmanina donustugunu birlikte okumak daha anlamli bir cerceve sunuyor.`;
 
   trainingSummaryRef.textContent =
-    `Eğitim geçmişinde en iyi validation accuracy ${formatPercent(training.best_val_accuracy)} seviyesine çıkıyor. ` +
-    `Bu görünüm, modelin transfer learning sonrasında belirli bir iyileşme yakaladığını; ancak sınıf dengesizliği nedeniyle hâlâ açık geliştirme alanları taşıdığını gösteriyor.`;
+    `Egitim gecmisinde en iyi validation accuracy ${formatPercent(training.best_val_accuracy)} seviyesine cikiyor. ` +
+    `Bu gorunum, modelin transfer learning sonrasinda belirli bir iyilesme yakaladigini; ancak sinif dengesizligi nedeniyle hala acik gelistirme alanlari tasidigini gosteriyor.`;
   matrixCaptionRef.textContent =
-    `Confusion matrix, sınıflar arasındaki karışma noktalarını açık biçimde gösterir. Özellikle ${weakest?.label || "zayıf sınıf"} etrafındaki dağılım, modelin en çok zorlandığı bölgeleri öne çıkarır.`;
+    `Confusion matrix, siniflar arasindaki karisma noktalarini acik bicimde gosterir. Ozellikle ${weakest?.label || "zayif sinif"} etrafindaki dagilim, modelin en cok zorlandigi bolgeleri one cikarir.`;
 
   renderTrainingCards(evaluation);
   showSlide(currentSlideIndex, { scroll: false });
@@ -454,7 +486,7 @@ nextSlideButton.addEventListener("click", () => {
 });
 
 document.addEventListener("fullscreenchange", () => {
-  fullscreenToggleButton.textContent = document.fullscreenElement ? "Tam Ekrandan Çık" : "Tam Ekran";
+  fullscreenToggleButton.textContent = document.fullscreenElement ? "Tam Ekrandan Cik" : "Tam Ekran";
 });
 
 document.addEventListener("keydown", (event) => {

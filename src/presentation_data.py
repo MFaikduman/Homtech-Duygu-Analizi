@@ -1,4 +1,4 @@
-"""Sunum modülü için proje özeti ve metrikleri derler."""
+"""Sunum modulu icin proje ozeti ve metrikleri derler."""
 
 from __future__ import annotations
 
@@ -32,6 +32,43 @@ FER2013_TEST_FALLBACK = {
     "surprise": 831,
     "neutral": 1233,
 }
+LITERATURE_BENCHMARKS = [
+    {
+        "label": "Bu proje",
+        "short_label": "Bizim model",
+        "accuracy": 53.48,
+        "year": 2026,
+        "note": "HOMTECH sunumu icin temel CNN/MobileNetV2 prototipi",
+    },
+    {
+        "label": "Pramerdorfer ve Kampel",
+        "short_label": "P&K 2016",
+        "accuracy": 75.20,
+        "year": 2016,
+        "note": "FER2013 uzerinde ensemble CNN yaklasimi",
+    },
+    {
+        "label": "Georgescu ve ark.",
+        "short_label": "Geo 2018",
+        "accuracy": 75.42,
+        "year": 2018,
+        "note": "Local learning tabanli FER2013 sonucu",
+    },
+    {
+        "label": "Khaireddin ve Chen",
+        "short_label": "K&C 2021",
+        "accuracy": 73.28,
+        "year": 2021,
+        "note": "DERL cikarimlariyla bildirilen FER2013 performansi",
+    },
+    {
+        "label": "Improved MobileNetV2",
+        "short_label": "IMV2 2024",
+        "accuracy": 68.62,
+        "year": 2024,
+        "note": "Hafif mimariyi iyilestiren guncel calisma",
+    },
+]
 
 
 def _count_split(directory: Path) -> dict:
@@ -216,6 +253,43 @@ def _parse_confusion_matrix() -> dict:
     }
 
 
+def _build_literature_payload(report: dict) -> dict:
+    current_accuracy = report.get("overall", {}).get("accuracy")
+    current_accuracy_percent = round((current_accuracy or 0) * 100, 2)
+
+    benchmarks = []
+    for item in LITERATURE_BENCHMARKS:
+        benchmarks.append(
+            {
+                **item,
+                "delta_vs_current": round(item["accuracy"] - current_accuracy_percent, 2),
+            }
+        )
+
+    external_benchmarks = [item for item in benchmarks if item["label"] != "Bu proje"]
+    best_reference = max(external_benchmarks, key=lambda item: item["accuracy"], default=None)
+    average_reference = round(
+        sum(item["accuracy"] for item in external_benchmarks) / len(external_benchmarks),
+        2,
+    ) if external_benchmarks else None
+
+    summary = (
+        f"Bu prototip {current_accuracy_percent:.2f}% dogruluk uretirken, secili literatur ornekleri "
+        f"ortalama {average_reference:.2f}% seviyesine cikiyor. En yuksek referans "
+        f"{best_reference['label']} ile {best_reference['accuracy']:.2f}% olarak goruluyor."
+        if best_reference and average_reference is not None
+        else "Literatur karsilastirmasi icin referans sonuclar hazirlanamadi."
+    )
+
+    return {
+        "current_accuracy": current_accuracy_percent,
+        "summary": summary,
+        "benchmarks": benchmarks,
+        "best_reference": best_reference,
+        "average_reference": average_reference,
+    }
+
+
 def _load_dataset_counts() -> tuple[dict, dict]:
     train_counts = _count_split(TRAIN_DIR)
     test_counts = _count_split(TEST_DIR)
@@ -243,11 +317,11 @@ def build_presentation_payload() -> dict:
 
     return {
         "project": {
-            "title": "HOMTECH Duygu Analizi ve Akıllı Ev Senaryo Sistemi",
-            "subtitle": "Duygu tanımayı akıllı ev otomasyonuna bağlayan sunum modülü",
+            "title": "HOMTECH Duygu Analizi ve Akilli Ev Senaryo Sistemi",
+            "subtitle": "Duygu tanimayi akilli ev otomasyonuna baglayan sunum modul",
             "goal": (
-                "Yüz ifadesinden duyguyu tahmin edip bunu ışık, sıcaklık, müzik, perde "
-                "ve bildirim gibi ev aksiyonlarına çevirmek."
+                "Yuz ifadesinden duyguyu tahmin edip bunu isik, sicaklik, muzik, perde "
+                "ve bildirim gibi ev aksiyonlarina cevirmek."
             ),
             "image_size": {"width": IMAGE_SIZE[0], "height": IMAGE_SIZE[1]},
             "emotion_labels": EMOTION_LABELS,
@@ -270,13 +344,14 @@ def build_presentation_payload() -> dict:
             "training": training,
             "confusion_matrix": _parse_confusion_matrix(),
         },
+        "literature": _build_literature_payload(report),
         "story": {
             "pipeline": [
-                "FER-2013 veri setinden 7 sınıflı duygu verisi okunur.",
-                "Görseller FER stiline yaklaştırılıp 96x96 RGB formata çekilir.",
-                "MobileNetV2 tabanlı model transfer learning ile eğitilir.",
-                "Tek görsel tahmininden sonra TTA ile skorlar dengelenir.",
-                "Sonuç, HOMTECH akıllı ev planına çevrilerek sahne önerisi üretir.",
+                "FER-2013 veri setinden 7 sinifli duygu verisi okunur.",
+                "Gorseller FER stiline yaklastirilip 96x96 RGB formata cekilir.",
+                "MobileNetV2 tabanli model transfer learning ile egitilir.",
+                "Tek gorsel tahmininden sonra TTA ile skorlar dengelenir.",
+                "Sonuc, HOMTECH akilli ev planina cevrilerek sahne onerisi uretir.",
             ],
             "tech_stack": [
                 "Python",

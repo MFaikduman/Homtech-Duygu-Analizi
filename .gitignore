@@ -1,25 +1,46 @@
+# Python / virtual environments
 .venv/
-.venv312/
+.venv*/
+.uv-cache/
 .keras/
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-*.log
+*$py.class
+
+# Local tooling and editor state
+.env
+.env.*
+!.env.example
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .ipynb_checkpoints/
 .DS_Store
+.vscode/
+
+# Runtime logs
+*.log
+reports/*.log
+
+# Build and packaging outputs
 build/
+build_*/
 dist/
+dist_*/
 *.spec
 
-data/raw/
-data/processed/
-data/sample_images/
-artifacts/
-
+# Local datasets, generated model files and reports
+data/raw/*
 !data/raw/.gitkeep
+data/processed/*
 !data/processed/.gitkeep
+data/sample_images/*
+!data/sample_images/.gitkeep
+artifacts/*
 !artifacts/.gitkeep
+
+# Keep empty project folders available after clone
 !reports/.gitkeep
 !notebooks/.gitkeep

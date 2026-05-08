@@ -1,4 +1,4 @@
-"""Proje genelinde kullanilacak sabitler."""
+﻿"""Proje genelinde kullanilacak sabitler."""
 
 import sys
 from pathlib import Path
@@ -30,11 +30,16 @@ SEED = 42
 INPUT_SHAPE = (96, 96, 3)
 NUM_CLASSES = 7
 VALIDATION_SPLIT = 0.1
-EPOCHS = 15
-LEARNING_RATE = 3e-4
+EPOCHS = 24
+LEARNING_RATE = 2e-4
+INITIAL_LABEL_SMOOTHING = 0.05
 TRAINING_OVERSAMPLE_FACTOR = 2
-FINE_TUNE_AT = 100
-FINE_TUNE_LEARNING_RATE = 1e-5
+FINE_TUNE_AT = 80
+FINE_TUNE_LEARNING_RATE = 5e-6
+FINE_TUNE_LABEL_SMOOTHING = 0.0
+EARLY_STOPPING_PATIENCE = 6
+REDUCE_LR_PATIENCE = 2
+USE_TTA_EVALUATION = True
 
 MODEL_PATH = ARTIFACTS_DIR / "emotion_cnn.keras"
 HISTORY_PATH = ARTIFACTS_DIR / "training_history.csv"

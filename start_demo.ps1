@@ -10,8 +10,11 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $pythonPath = Join-Path $projectRoot ".venv312\Scripts\python.exe"
 $modelPath = Join-Path $projectRoot "artifacts\emotion_cnn.keras"
+$reportsDir = Join-Path $projectRoot "reports"
 $healthUrl = "http://{0}:{1}/api/health" -f $HostAddress, $Port
 $appUrl = "http://{0}:{1}/" -f $HostAddress, $Port
+
+New-Item -ItemType Directory -Force -Path $reportsDir | Out-Null
 
 if (-not (Test-Path -LiteralPath $pythonPath)) {
     throw "Python bulunamadi: $pythonPath`nOnce .venv312 ortamini olustur."
@@ -31,8 +34,8 @@ $serverArgs = @(
     $Port
 )
 
-$stdoutPath = Join-Path $projectRoot "reports\demo_web.out.log"
-$stderrPath = Join-Path $projectRoot "reports\demo_web.err.log"
+$stdoutPath = Join-Path $reportsDir "demo_web.out.log"
+$stderrPath = Join-Path $reportsDir "demo_web.err.log"
 
 Write-Host "HOMTECH demo baslatiliyor..." -ForegroundColor Cyan
 Write-Host "Adres: $appUrl"
