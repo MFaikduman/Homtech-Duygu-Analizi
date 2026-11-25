@@ -1,1 +1,0 @@
-"""Proje kaynak paketi."""

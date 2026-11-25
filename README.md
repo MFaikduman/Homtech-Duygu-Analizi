@@ -1,252 +1,151 @@
-# HOMTECH Duygu Analizi ve Akilli Ev Senaryo Sistemi
+# HOMTECH EmotionAI
 
-HOMTECH, yuz ifadesinden duygu tahmini yapan ve bu sonucu akilli ev senaryolarina ceviren bir Python projesidir. Proje; TensorFlow/Keras modeli, FER-2013 veri setiyle egitim-degerlendirme akisi, tek gorselden tahmin, yerel web demo arayuzu ve opsiyonel Windows masaustu paketleme adimlarini icerir.
+**Klasik makine öğrenmesiyle** yüz ifadesi sınıflandırma ve kullanıcı onayına
+dayalı akıllı ev aydınlatma prototipi.
 
-Bu repo bir `npm` projesi degildir. Web arayuzu Python'un yerel HTTP sunucusu uzerinden calisir.
+Aktif yöntem **HOG özellik çıkarımı + StandardScaler + PCA + RBF SVM**.
+HOG, görüntünün yerel kenar ve gradyan yapısını sayısal özelliklere dönüştürür.
+Varsayılan model kızgınlık, korku, mutluluk, üzüntü, şaşkınlık ve nötr
+ifadelerini sınıflandırır.
 
-## Teknolojiler
+## Yapı
 
-- Python 3.12
-- TensorFlow / Keras
-- NumPy, Pandas
-- scikit-learn
-- OpenCV
-- Pillow
-- Matplotlib, Seaborn
-- HTML / CSS / JavaScript
-- Opsiyonel: pywebview, PyInstaller
+- `src/homtech/ml/rafdb.py`: RAF-DB okuma, doğrulama ve veri ayrımı.
+- `src/homtech/ml/features.py`: gri ton, boyutlandırma ve HOG çıkarımı.
+- `src/homtech/ml/model.py`: ölçekleme + SVM ve model kaydetme/yükleme.
+- `src/homtech/ml/train.py`: C değerlerini doğrulama kümesinde karşılaştırma.
+- `src/homtech/ml/evaluate.py`: resmî test değerlendirmesi.
+- `src/homtech/ml/metrics.py`: accuracy, macro F1 ve confusion matrix.
+- `tests/`: veri, özellik çıkarımı ve eğitim/değerlendirme testleri.
+- `data/downloads/`: özgün RAF-DB indirmeleri; Git dışında.
+- `data/raw/rafdb/BasicEmo/`: hazırlanmış yüz görselleri ve etiketler; Git dışında.
+- `artifacts/datasets/`: veri doğrulama raporları.
+- `artifacts/runs/`: model, deney kayıtları ve değerlendirme sonuçları.
+- `archive/`: önceki TensorFlow, Caffe ve PyTorch çalışmaları.
 
-## Hizli Baslangic
+[Veri düzeni](data/README.md) · [Geliştirme rehberi](docs/emotionai.md) ·
+[Arşiv](archive/README.md)
 
-Komutlari `README.md` ve `requirements.txt` dosyalarinin bulundugu repo kokunde calistirin.
+## Kurulum
 
-```powershell
-git clone https://github.com/MFaikduman/Homtech-Duygu-Analizi.git
-cd Homtech-Duygu-Analizi
-uv venv --python 3.12 --seed .venv312
-.\.venv312\Scripts\Activate.ps1
-uv pip install -r requirements.txt
-python -m src.demo_web
-```
-
-Tarayicida su adresi acin:
-
-```text
-http://127.0.0.1:8000
-```
-
-Windows icin hazir baslatma scripti de kullanilabilir:
+Python 3.12 kullanın. Komutları proje kökünde çalıştırın:
 
 ```powershell
-.\start_demo.ps1
+uv sync --locked
 ```
 
-PowerShell script calistirmayi engellerse:
+CUDA, PyTorch veya önceden eğitilmiş model indirmesi gerekmez. Eğitim CPU'da
+çalışır. Önceki `--extra cuda`, `--extra training`, `--epochs` ve
+`--device cuda` komutları bu yöntem için kullanılmaz.
+
+## Veri kontrolü
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\start_demo.ps1
+uv run --no-sync homtech-check-data --verify-images --output artifacts/datasets/rafdb-audit.json
 ```
 
-> Not: Ilk kurulumdan sonra web demo acilir. Egitilmis model yoksa gorsel analiz modu model isteyebilir; senaryo modu model olmadan calisir.
+Mevcut veri kontrolünde 15.339 görsel okunabilir; resmî eğitim kümesi 12.271,
+test kümesi 3.068 görseldir. Doğrulama, resmî eğitim kümesinden sınıf bazında
+ayrılır. Test kümesi hiperparametre seçiminde kullanılmaz.
 
-## macOS / Linux Kurulum
-
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m src.demo_web
-```
-
-## Veri Seti
-
-Model egitimi ve gorsel tahmin icin FER-2013 veri seti gerekir:
-
-```text
-https://www.kaggle.com/datasets/msambare/fer2013
-```
-
-Veri setini su klasor yapisiyla yerlestirin:
-
-```text
-data/raw/fer2013/
-|-- train/
-|   |-- angry/
-|   |-- disgust/
-|   |-- fear/
-|   |-- happy/
-|   |-- neutral/
-|   |-- sad/
-|   `-- surprise/
-`-- test/
-    |-- angry/
-    |-- disgust/
-    |-- fear/
-    |-- happy/
-    |-- neutral/
-    |-- sad/
-    `-- surprise/
-```
-
-Veri setini kontrol etmek icin:
+## Eğitimi başlatma
 
 ```powershell
-python -m src.data.check_fer2013
+uv run --no-sync homtech-train --output-dir artifacts/runs/six-class-rbf-001
 ```
 
-## Model Egitimi
+Varsayılan ayarlar 12 yönlü HOG, 128 PCA bileşeni ve RBF SVM için C=1'dir.
+StandardScaler, PCA ve SVM yalnızca eğitim bölümünden öğrenir.
+`--c-values` ile birden fazla aday verilirse doğrulama macro F1 skoru en yüksek
+model kaydedilir. Yedi sınıflı doğrusal SVM için `--profile seven-linear` kullanılır.
+
+Çıktılar: `best.joblib`, `validation_results.csv`, `run_manifest.json`.
+Çıktı klasörü doluysa `six-class-rbf-002` gibi yeni bir ad kullanın.
+
+## Nihai değerlendirme
 
 ```powershell
-python -m src.train
+uv run --no-sync homtech-evaluate --model artifacts/runs/six-class-rbf-001/best.joblib
 ```
 
-Egitim tamamlandiginda baslica su dosyalar olusur:
+Altı sınıflı model, resmî test bölümündeki kapsam içi 2.908 görselde değerlendirilir.
+Accuracy, macro F1, sınıf bazlı precision/recall/F1 ve confusion matrix
+(JSON/CSV/PNG), koşunun `evaluation/` klasörüne yazılır. Test dosyalarının
+içerik hash'leri eğitim manifestiyle eşleşmelidir. Joblib dosyalarını yalnızca
+güvendiğiniz, kendi oluşturduğunuz koşulardan yükleyin.
 
-- `artifacts/emotion_cnn.keras`
-- `artifacts/training_history.csv`
+`homtech-check-rafdb`, `homtech-train-rafdb` ve `homtech-evaluate-rafdb` aynı
+araçlara yönlenen eşdeğer komut adlarıdır.
 
-Modeli degerlendirmek icin:
+## İyileştirme deneyi
+
+İlk tarama, resmî test sonucunu etkilemeden HOG ayarlarını ve doğrusal SVM'i
+karşılaştırır:
 
 ```powershell
-python -m src.evaluate
+uv run --no-sync homtech-experiment --models linear --output-dir artifacts/runs/classical-search-001
 ```
 
-Degerlendirme su dosyalari uretebilir:
+Bu komut yedi sınıflı araştırma koşularında `baseline`, `orient12` ve `finegrid`
+HOG ayarlarında C=0.003, 0.01 ve 0.03 değerlerini doğrulama macro F1 ile sıralar.
 
-- `artifacts/confusion_matrix.png`
-- `artifacts/confusion_matrix.csv`
-- `artifacts/classification_report.txt`
+## Masaüstü arayüzü
 
-## Tek Gorselle Tahmin
+Gri ve altın tonlarındaki Windows masaüstü uygulamasını başlatmak için:
 
 ```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg"
+uv sync --locked
+uv run --no-sync homtech-desktop
 ```
 
-Yuz algilama yerine gorselin tamamini kullanmak icin:
+Üst çubuktaki **BİL4011 Sunumu**, final ödevinin yedi adımını yerel deney
+raporlarından grafiklerle anlatır. **Analiz ve ön işleme** bölümünde yöntem
+adımlarına tıklanabilir. **Model değerlendirmesi** bölümünde karışıklık
+matrisi, test profili, satır yüzdesi, örnek sayısı ve sınıf metrikleri seçilebilir.
+Bireysel hücreler seçilince o sınıfın örnek sayısı ve oranı açıklanır.
+Bölümler ok tuşlarıyla ilerletilebilir.
+**Tam ekran** ve **Uygulamaya geç** kontrolleri sınıf içi demo için kullanılabilir.
+
+**Günlük**, **Sıcak ortam**, **Rahatlama** ve **Odak** kartları ışığı anında
+önizler. **Modu uygula** seçilen modu etkinleştirir. **Vazgeç** etkin moda döner.
+İfade analizinin önerisi de onaydan önce **Önizle** ile görülebilir.
+
+**Hazır örnekler** kartları yedi ifadeden birini doğrudan modele gönderir.
+Örnekler yerel RAF-DB `original.zip` arşivinden okunur.
+
+Fotoğrafı önizleme alanına sürükleyip bırakın veya **Fotoğraf yükle** ile seçin.
+**Kamerayı aç** ile canlı analizi
+başlatın. Model yaklaşık saniyede iki kareyi denetler ve son tahmini gösterir.
+Kamera ve çekilen kare önizlemede ayna gibi gösterilir. Model, kameranın
+orijinal karesini analiz eder.
+Işık önerisi için en az bir saniyeye yayılan üç ardışık güvenilir kare aynı ifadeyi
+göstermelidir.
+**Kareyi çek** seçeneği tek bir fotoğrafı analiz eder. Eşik altındaki tahminler
+**Olası ifade** olarak gösterilir. İğrenme ve düşük skorlu tahminlerde
+öneri çıkmaz. **Onayla ve uygula** ışık önizlemesini günceller.
+
+Yakın kırpılmış fotoğraflar için ikinci bir yüz algılama denemesi yapılır.
+**Yüzü seç** görünürse fotoğraf üzerinde sürükleyerek yüzün tamamını çerçeveleyin.
+Yakın çekim ve el ile seçim sonuçları **Olası ifade** olarak gösterilir.
+
+Uygulama `artifacts/runs/camera-rbf-001/best.joblib` dosyasını kullanır.
+Yeni kurulumda RAF-DB'nin orijinal görsel arşiviyle modeli oluşturmak için
+`uv run --no-sync homtech-train --profile camera-rbf` çalıştırın.
+Yakın çekimler için hizalı fotoğraf modelini de hazırlamak üzere
+`uv run --no-sync homtech-train --profile seven-rbf` çalıştırılabilir.
+
+## Testler
 
 ```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg" --use-full-image
+uv run --no-sync python -m compileall -q src/homtech tests
+uv run --no-sync python -m unittest discover -s tests -v
+uv pip check
 ```
 
-Baglam parametreleriyle:
+Otomatik testler küçük sentetik görseller kullanır. RAF-DB model sonuçları
+eğitim koşusunun `evaluation/` klasöründedir.
 
-```powershell
-python -m src.predict --image "ornek_gorsel_yolu.jpg" --time-of-day evening --occupancy family --quiet-hours
-```
+## Sonraki aşamalar
 
-## Senaryo Modu
-
-Model calistirmadan akilli ev senaryosu uretmek icin:
-
-```powershell
-python -m src.smart_home_demo --emotion sad --confidence 0.82 --time-of-day night --quiet-hours
-```
-
-## Kalite Kontrolleri
-
-Kaynak kodun import/syntax kontrolu:
-
-```powershell
-python -m compileall -q src
-```
-
-Hafif smoke testleri:
-
-```powershell
-python -m unittest discover -s tests
-```
-
-Bagimlilik uyumlulugu:
-
-```powershell
-uv pip check --python .\.venv312\Scripts\python.exe
-```
-
-GitHub Actions, `main` branch'ine push veya pull request geldiginde ayni compile ve smoke test akisini calistirir.
-
-## Web Demo
-
-```powershell
-python -m src.demo_web
-```
-
-Adresler:
-
-- Demo paneli: `http://127.0.0.1:8000/`
-- Sunum modu: `http://127.0.0.1:8000/presentation`
-- Saglik kontrolu: `http://127.0.0.1:8000/api/health`
-
-## Opsiyonel Masaustu Uygulama
-
-Masaustu uygulama web demoyu kendi penceresinde acar. Bu akis GitHub'dan calistirma icin zorunlu degildir.
-
-```powershell
-uv pip install -r requirements-desktop.txt
-.\start_desktop.ps1
-```
-
-Windows `.exe` paketi almak icin:
-
-```powershell
-.\build_desktop.ps1
-```
-
-Cikti klasoru:
-
-```text
-dist/HOMTECHMoodConsole/
-```
-
-## Proje Yapisi
-
-```text
-.
-|-- data/
-|   |-- raw/
-|   |-- processed/
-|   `-- sample_images/
-|-- notebooks/
-|-- reports/
-|-- scripts/
-|-- tests/
-|-- src/
-|   |-- data/
-|   |-- models/
-|   |-- web_demo/
-|   |-- config.py
-|   |-- demo_web.py
-|   |-- desktop_app.py
-|   |-- evaluate.py
-|   |-- image_preprocessing.py
-|   |-- predict.py
-|   |-- presentation_data.py
-|   |-- smart_home.py
-|   |-- smart_home_demo.py
-|   `-- train.py
-|-- requirements.txt
-|-- requirements-desktop.txt
-|-- pyproject.toml
-|-- start_demo.ps1
-|-- start_desktop.ps1
-|-- build_desktop.ps1
-`-- README.md
-```
-
-## GitHub Notlari
-
-- Python surumu `.python-version` ile `3.12` olarak sabitlendi.
-- Paket metadata ve konsol scriptleri `pyproject.toml` icinde tutulur.
-- `main` branch'i icin `.github/workflows/ci.yml` smoke test workflow'u vardir.
-- Gercek API key, token veya parola gerekmiyor; bu nedenle `.env.example` dosyasina ihtiyac yok.
-- `.env`, sanal ortamlar, cache klasorleri, FER-2013 veri seti, egitilmis model/artifact dosyalari ve PyInstaller build ciktilari repoya eklenmemelidir.
-- `data/raw/`, `data/processed/`, `data/sample_images/`, `artifacts/`, `reports/` ve `notebooks/` klasorleri `.gitkeep` dosyalariyla bos halde tutulabilir.
-- Egitilmis model dosyasi buyuk oldugu icin GitHub'a koymak yerine `python -m src.train` ile yerelde uretin.
-
-## Sorun Giderme
-
-- `Egitilmis model bulunamadi` hatasi: `python -m src.train` ile modeli egitin veya web demoda senaryo modunu kullanin.
-- TensorFlow kurulum sorunu: Python 3.12 kullandiginizdan emin olun.
-- PowerShell script hatasi: `powershell -ExecutionPolicy Bypass -File .\start_demo.ps1` komutunu deneyin.
-- Veri seti bulunamadi hatasi: FER-2013 klasorlerini `data/raw/fer2013/` altina yerlestirin.
+SQLite tercihleri, kullanıcı onayıyla ESP32/HTTP aydınlatma kontrolü ve EXE.
+Modelin çıktısı görüntüdeki yüz ifadesine dair bir tahmindir.

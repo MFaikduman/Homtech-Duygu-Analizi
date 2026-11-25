@@ -8,6 +8,7 @@ __pycache__/
 *.pyo
 *.pyd
 *$py.class
+*.egg-info/
 
 # Local tooling and editor state
 .env
@@ -22,7 +23,6 @@ __pycache__/
 
 # Runtime logs
 *.log
-reports/*.log
 
 # Build and packaging outputs
 build/
@@ -32,15 +32,11 @@ dist_*/
 *.spec
 
 # Local datasets, generated model files and reports
+archive/*
+!archive/README.md
+data/downloads/*
+!data/downloads/.gitkeep
 data/raw/*
 !data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-data/sample_images/*
-!data/sample_images/.gitkeep
 artifacts/*
 !artifacts/.gitkeep
-
-# Keep empty project folders available after clone
-!reports/.gitkeep
-!notebooks/.gitkeep

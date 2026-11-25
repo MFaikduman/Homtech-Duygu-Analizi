@@ -10,6 +10,8 @@
 *.css text eol=lf
 *.js text eol=lf
 *.ps1 text eol=crlf
+.gitattributes text eol=lf
+.gitignore text eol=lf
 
 *.png binary
 *.jpg binary
@@ -18,3 +20,8 @@
 *.pdf binary
 *.keras binary
 *.h5 binary
+*.pt binary
+*.pth binary
+*.zip binary
+*.mat binary
+*.joblib binary

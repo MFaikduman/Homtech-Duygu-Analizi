@@ -4,36 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homtech-duygu-analizi"
-version = "0.1.0"
-description = "Yuz ifadesi tabanli duygu analizi ve akilli ev senaryo demosu."
+dynamic = ["version"]
+description = "HOMTECH EmotionAI: yuz ifadesi siniflandirma ve akilli ev altyapisi."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "tensorflow==2.21.0",
   "numpy",
-  "pandas",
   "matplotlib",
-  "seaborn",
   "scikit-learn",
-  "opencv-python",
+  "joblib",
+  "opencv-python>=4.10,<5",
   "Pillow",
-]
-
-[project.optional-dependencies]
-desktop = [
-  "pywebview",
-  "pyinstaller",
+  "PySide6-Essentials>=6.8,<7",
 ]
 
 [project.scripts]
-homtech-demo = "src.demo_web:main"
-homtech-scenario = "src.smart_home_demo:main"
-homtech-train = "src.train:main"
-homtech-evaluate = "src.evaluate:main"
+homtech-train = "homtech.ml.train:main"
+homtech-evaluate = "homtech.ml.evaluate:main"
+homtech-check-data = "homtech.ml.rafdb:main"
+homtech-check-rafdb = "homtech.ml.rafdb:main"
+homtech-train-rafdb = "homtech.ml.train:main"
+homtech-evaluate-rafdb = "homtech.ml.evaluate:main"
+homtech-experiment = "homtech.ml.experiment:main"
+homtech-desktop = "homtech.desktop:main"
 
-[tool.setuptools]
-packages = ["src", "src.data", "src.models"]
-include-package-data = true
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["homtech*"]
 
-[tool.setuptools.package-data]
-src = ["web_demo/*"]
+[tool.setuptools.dynamic]
+version = {attr = "homtech.__version__"}
