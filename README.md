@@ -8,6 +8,18 @@ HOG, görüntünün yerel kenar ve gradyan yapısını sayısal özelliklere dö
 Varsayılan model kızgınlık, korku, mutluluk, üzüntü, şaşkınlık ve nötr
 ifadelerini sınıflandırır.
 
+## Ekran görüntüleri
+
+**Masaüstü uygulaması** · Ev modları, tablet biçimli kamera alanı ve hazır örnekler.
+
+![HOMTECH masaüstü uygulaması](docs/screenshots/desktop.png)
+
+**BİL4011 sunumu** · Proje açılışı ve etkileşimli karışıklık matrisi.
+
+![BİL4011 sunumu açılış ekranı](docs/screenshots/presentation.png)
+
+![Karar sonuçlarını gösteren etkileşimli karışıklık matrisi](docs/screenshots/confusion-matrix.png)
+
 ## Yapı
 
 - `src/homtech/ml/rafdb.py`: RAF-DB okuma, doğrulama ve veri ayrımı.
